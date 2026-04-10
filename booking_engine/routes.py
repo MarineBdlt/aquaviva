@@ -340,10 +340,11 @@ def create_rooms():
         
         if not total_rooms:
             flash("Total rooms cannot be zero!")
-            return redirect("create_rooms")
+            return redirect("/create_rooms")
 
         if min_guests <= 0 or min_guests > max_guests:
             flash("Minimum guests cannot be negative/0 or higher than max guests!")
+            return redirect("/create_rooms")
         
         room_image_new = ''
 

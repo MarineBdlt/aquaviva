@@ -21,7 +21,7 @@
         <div class="carousel-inner rounded">
             {% for image in hero_images %}
             <div class="carousel-item {{ 'active' if loop.first else '' }}">
-                <img src="/static/{{ image.image_file }}" class="d-block w-100" style="height: 420px; object-fit: cover;" alt="{{ image.caption or 'Aqua Viva' }}">
+                <img src="/static/{{ image.image_file }}" class="d-block w-100" style="height: 620px; object-fit: cover;" alt="{{ image.caption or 'Aqua Viva' }}">
                 {% if image.caption %}
                 <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
                     <p class="mb-0">{{ image.caption }}</p>

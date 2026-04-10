@@ -66,10 +66,10 @@
     <div class="navbar bg-info bg-opacity-50  p-0 ">
         <div class="container d-flex flex-row justify-content-center">
             <i class="fa fa-phone mx-3"></i>
-            <a class=" text-dark" href="tel:+1-949-468-2750" style="text-decoration: none;">+1-949-468-2750</a>
+            <a class=" text-dark" href="tel:{{ site_phone }}" style="text-decoration: none;">{{ site_phone }}</a>
 
             <i class="fa fa-envelope mx-3"></i>
-            <a class=" text-dark " href="mailto:cs50x@hotel.edu" style="text-decoration: none;">cs50x@hotel.edu</a>
+            <a class=" text-dark " href="mailto:{{ site_email }}" style="text-decoration: none;">{{ site_email }}</a>
         </div>
     </div>
 
@@ -80,7 +80,7 @@
                 <nav class="navbar navbar-expand-lg navbar-light bg-dark shadow-lg bg-opacity-50  border-bottom border-warning ">
                     <div class="container">
                     <a class="navbar-brand" href="/">
-                        <img src="/static/images/logo1.png" width="100" height="50" class="d-inline-block align-top ml-3" alt="cs50xhotellogo">
+                        <img src="/static/{{ site_logo_path }}" width="100" height="50" class="d-inline-block align-top ml-3" alt="aqua-viva-logo">
                     </a>
                     <button class="navbar-toggler"
                     type="button" 

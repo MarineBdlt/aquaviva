@@ -10,51 +10,60 @@ CMS
     <h2 class="text-warning mb-3">CMS</h2>
 
     <div class="card p-3 mb-4">
-        <h4>Edit Site Texts</h4>
+        <h4>HOME & GALLERY</h4>
         <form action="{{ url_for('cms') }}" method="post">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="hidden" name="action" value="update_content" />
-
-            {% for key in ['home', 'about', 'prices', 'gallery'] %}
-            <div class="mb-3 border-top pt-3">
-                <h5 class="text-capitalize">{{ key }}</h5>
-                <input class="form-control mb-2" type="text" name="{{ key }}_title" value="{{ contents[key].title }}" placeholder="{{ key }} title" />
-                <textarea class="form-control" name="{{ key }}_body" rows="3" placeholder="{{ key }} text">{{ contents[key].body }}</textarea>
+            <div class="mb-3">
+                <h5>Home text</h5>
+                <input class="form-control mb-2" type="text" name="home_title" value="{{ contents['home'].title }}" placeholder="Home title" />
+                <textarea class="form-control" name="home_body" rows="3" placeholder="Home text">{{ contents['home'].body }}</textarea>
             </div>
-            {% endfor %}
-
-            <button class="btn btn-warning" type="submit">Save Texts</button>
+            <div class="mb-3 border-top pt-3">
+                <h5>Gallery text</h5>
+                <input class="form-control mb-2" type="text" name="gallery_title" value="{{ contents['gallery'].title }}" placeholder="Gallery title" />
+                <textarea class="form-control" name="gallery_body" rows="3" placeholder="Gallery text">{{ contents['gallery'].body }}</textarea>
+            </div>
+            <button class="btn btn-warning" type="submit">Save Home & Gallery Texts</button>
         </form>
-    </div>
 
-    <div class="card p-3 mb-4">
-        <h4>Change Banner</h4>
-        <p class="mb-2">Current banner: <code>/static/{{ banner_path }}</code></p>
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="upload_banner" />
-            <input class="form-control mb-2" type="file" name="banner_image" accept=".png,.jpg,.jpeg,.gif" required />
-            <button class="btn btn-warning" type="submit">Upload Banner</button>
-        </form>
-    </div>
-
-    <div class="card p-3 mb-4">
-        <h4>Change Home Background</h4>
+        <hr>
+        <h5>Home background image</h5>
+        <p class="mb-2">Displayed on <strong>Home page</strong>. If empty, global banner is used.</p>
         <p class="mb-2">Current home background: <code>/static/{{ home_bg_path if home_bg_path else banner_path }}</code></p>
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
+        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="hidden" name="action" value="upload_home_background" />
             <input class="form-control mb-2" type="file" name="home_bg_image" accept=".png,.jpg,.jpeg,.gif" required />
             <button class="btn btn-warning" type="submit">Upload Home Background</button>
         </form>
-    </div>
 
-    <div class="card p-3 mb-4">
-        <h4>Gallery Images</h4>
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3">
+        <form action="{{ url_for('cms') }}" method="post" class="mb-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="update_home_slider" />
+            <h5 class="mb-2">Home Slideshow Order</h5>
+            <p class="small text-muted mb-2">All gallery photos are shown. Checked photos appear first, in the order below.</p>
+            <div class="row g-2" id="sliderSelectionBox">
+                {% for image in gallery_images %}
+                <div class="col-md-4">
+                    <label class="form-check p-2 border rounded d-block">
+                        <input class="form-check-input mt-0" type="checkbox" name="slider_image_ids" value="{{ image.id }}" {% if image.id in current_slider_ids %}checked{% endif %}>
+                        <span class="ms-1">Start diapo</span>
+                        <img src="/static/{{ image.image_file }}" class="img-fluid rounded mt-2" alt="{{ image.caption or image.image_file }}" style="height: 90px; width: 100%; object-fit: cover;">
+                        <small class="d-block mt-1">#{{ image.id }} {{ image.caption or image.image_file }}</small>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            <button class="btn btn-warning mt-2" type="submit">Save Home Slideshow</button>
+        </form>
+
+        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3" id="galleryUploadForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             <input type="hidden" name="action" value="upload_gallery" />
-            <input class="form-control mb-2" type="file" name="gallery_image" accept=".png,.jpg,.jpeg,.gif" multiple required />
+            <p class="mb-1"><strong>Add photos to gallery</strong></p>
+            <input class="form-control mb-2" type="file" id="galleryFileInput" name="gallery_image" accept=".png,.jpg,.jpeg,.gif" multiple required />
+            <div id="galleryFileList" class="small text-muted mb-2"></div>
             <input class="form-control mb-2" type="text" name="caption" placeholder="Caption for selected images (optional)" />
             <button class="btn btn-warning" type="submit">Add Gallery Image(s)</button>
         </form>
@@ -64,7 +73,7 @@ CMS
             {% for image in gallery_images %}
             <div class="col-md-4">
                 <div class="card">
-                    <img src="/static/{{ image.image_file }}" class="card-img-top" alt="{{ image.caption or 'gallery image' }}">
+                    <img src="/static/{{ image.image_file }}" class="card-img-top" alt="{{ image.caption or 'gallery image' }}" style="height: 120px; object-fit: cover;">
                     <div class="card-body">
                         <p class="card-text">{{ image.caption or "No caption" }}</p>
                         <form action="{{ url_for('cms') }}" method="post">
@@ -80,5 +89,74 @@ CMS
         </div>
         {% endif %}
     </div>
+
+    <div class="card p-3 mb-4">
+        <h4>ABOUT</h4>
+        <form action="{{ url_for('cms') }}" method="post" class="mb-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="update_content" />
+            <input class="form-control mb-2" type="text" name="about_title" value="{{ contents['about'].title }}" placeholder="About title" />
+            <textarea class="form-control mb-2" name="about_body" rows="3" placeholder="About text">{{ contents['about'].body }}</textarea>
+            <button class="btn btn-warning" type="submit">Save About Text</button>
+        </form>
+        <p class="mb-2">This image is displayed on the <strong>About page</strong>.</p>
+        <p class="mb-2">Current about image: <code>/static/{{ about_image_path if about_image_path else 'none' }}</code></p>
+        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="upload_about_image" />
+            <input class="form-control mb-2" type="file" name="about_image" accept=".png,.jpg,.jpeg,.gif" required />
+            <button class="btn btn-warning" type="submit">Upload About Image</button>
+        </form>
+    </div>
+
+    <div class="card p-3 mb-4">
+        <h4>PRICES</h4>
+        <form action="{{ url_for('cms') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="update_content" />
+            <input class="form-control mb-2" type="text" name="prices_title" value="{{ contents['prices'].title }}" placeholder="Prices title" />
+            <textarea class="form-control mb-2" name="prices_body" rows="3" placeholder="Prices text">{{ contents['prices'].body }}</textarea>
+            <button class="btn btn-warning" type="submit">Save Prices Text</button>
+        </form>
+    </div>
+
+    <div class="card p-3 mb-4">
+        <h4>GLOBAL SETTINGS</h4>
+        <form action="{{ url_for('cms') }}" method="post" class="mb-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="update_contact" />
+            <input class="form-control mb-2" type="text" name="site_phone" value="{{ site_phone }}" placeholder="Phone number" />
+            <input class="form-control mb-2" type="email" name="site_email" value="{{ site_email }}" placeholder="Contact email" />
+            <button class="btn btn-warning" type="submit">Save Contact</button>
+        </form>
+        <p class="mb-2">Current logo: <code>/static/{{ site_logo_path }}</code></p>
+        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="upload_logo" />
+            <input class="form-control mb-2" type="file" name="site_logo" accept=".png,.jpg,.jpeg,.gif" required />
+            <button class="btn btn-warning" type="submit">Upload Logo</button>
+        </form>
+        <p class="mb-2">Current banner: <code>/static/{{ banner_path }}</code></p>
+        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="upload_banner" />
+            <input class="form-control mb-2" type="file" name="banner_image" accept=".png,.jpg,.jpeg,.gif" required />
+            <button class="btn btn-warning" type="submit">Upload Banner</button>
+        </form>
+    </div>
 </div>
+
+<script>
+  const fileInput = document.getElementById('galleryFileInput');
+  const fileList = document.getElementById('galleryFileList');
+
+  if (fileInput && fileList) {
+    const syncFileList = () => {
+      const names = Array.from(fileInput.files || []).map(f => f.name);
+      fileList.textContent = names.length ? names.join(', ') : 'No file selected';
+    };
+
+    fileInput.addEventListener('change', syncFileList);
+  }
+</script>
 {% endblock %}

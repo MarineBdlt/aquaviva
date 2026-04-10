@@ -35,6 +35,24 @@ def ensure_cms_defaults():
     home_background = SiteSetting.query.filter_by(setting_key="home_background_image").first()
     if not home_background:
         db.session.add(SiteSetting(setting_key="home_background_image", setting_value=""))
+    home_slider = SiteSetting.query.filter_by(setting_key="home_slider_ids").first()
+    if not home_slider:
+        db.session.add(SiteSetting(setting_key="home_slider_ids", setting_value=""))
+    home_slider_mode = SiteSetting.query.filter_by(setting_key="home_slider_mode").first()
+    if not home_slider_mode:
+        db.session.add(SiteSetting(setting_key="home_slider_mode", setting_value="selected"))
+    about_image = SiteSetting.query.filter_by(setting_key="about_image").first()
+    if not about_image:
+        db.session.add(SiteSetting(setting_key="about_image", setting_value=""))
+    phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
+    if not phone:
+        db.session.add(SiteSetting(setting_key="site_phone", setting_value="+1-949-468-2750"))
+    email = SiteSetting.query.filter_by(setting_key="site_email").first()
+    if not email:
+        db.session.add(SiteSetting(setting_key="site_email", setting_value="cs50x@hotel.edu"))
+    logo = SiteSetting.query.filter_by(setting_key="site_logo").first()
+    if not logo:
+        db.session.add(SiteSetting(setting_key="site_logo", setting_value="images/logo1.png"))
 
     db.session.commit()
 
@@ -52,9 +70,19 @@ def inject_site_banner():
     home_background = SiteSetting.query.filter_by(setting_key="home_background_image").first()
     banner_path = banner.setting_value if banner else "images/banner-5.png"
     home_bg_path = home_background.setting_value if home_background else ""
+    phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
+    email = SiteSetting.query.filter_by(setting_key="site_email").first()
+    logo = SiteSetting.query.filter_by(setting_key="site_logo").first()
+    context = {
+        "site_phone": phone.setting_value if phone else "+1-949-468-2750",
+        "site_email": email.setting_value if email else "cs50x@hotel.edu",
+        "site_logo_path": logo.setting_value if logo else "images/logo1.png",
+    }
     if request.path == "/" and home_bg_path:
-        return {"site_banner_path": home_bg_path}
-    return {"site_banner_path": banner_path}
+        context["site_banner_path"] = home_bg_path
+        return context
+    context["site_banner_path"] = banner_path
+    return context
 
 
 def get_or_create_single_gite():
@@ -191,8 +219,22 @@ def index():
                                 
         return redirect("/")
     else:
+        slider_setting = SiteSetting.query.filter_by(setting_key="home_slider_ids").first()
+        selected_ids = []
+        if slider_setting and slider_setting.setting_value:
+            for raw in slider_setting.setting_value.split(","):
+                raw = raw.strip()
+                if raw.isdigit():
+                    selected_ids.append(int(raw))
 
-        images = GalleryImage.query.order_by(GalleryImage.created_at.desc()).all()
+        all_images = GalleryImage.query.order_by(GalleryImage.created_at.desc()).all()
+        if selected_ids:
+            selected_map = {img.id: img for img in all_images}
+            ordered_selected = [selected_map[i] for i in selected_ids if i in selected_map]
+            remaining = [img for img in all_images if img.id not in selected_ids]
+            images = ordered_selected + remaining
+        else:
+            images = all_images
         return render_template("index.html", home_content=get_site_content("home"), hero_images=images)
 
 
@@ -212,7 +254,12 @@ def prices():
 @app.route("/about", methods=["GET"])
 def about():
     ensure_cms_defaults()
-    return render_template("about.html", about_content=get_site_content("about"))
+    about_image = SiteSetting.query.filter_by(setting_key="about_image").first()
+    return render_template(
+        "about.html",
+        about_content=get_site_content("about"),
+        about_image_path=about_image.setting_value if about_image else ""
+    )
 
 
 # Handle the client booking information, create client and reservation in db
@@ -604,6 +651,15 @@ def cms():
             flash("Site texts updated.")
             return redirect("/cms")
 
+        if action == "update_contact":
+            phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
+            email = SiteSetting.query.filter_by(setting_key="site_email").first()
+            phone.setting_value = request.form.get("site_phone", phone.setting_value)
+            email.setting_value = request.form.get("site_email", email.setting_value)
+            db.session.commit()
+            flash("Contact details updated.")
+            return redirect("/cms")
+
         if action == "upload_banner":
             banner_image = request.files.get("banner_image")
             if banner_image and allowed_file(banner_image.filename):
@@ -632,6 +688,34 @@ def cms():
                 flash("Unsupported home background file.")
             return redirect("/cms")
 
+        if action == "upload_about_image":
+            about_image = request.files.get("about_image")
+            if about_image and allowed_file(about_image.filename):
+                filename = secure_filename(about_image.filename)
+                if filename:
+                    about_image.save(os.path.join(basedir, app.config['UPLOAD_FOLDER'], filename))
+                    setting = SiteSetting.query.filter_by(setting_key="about_image").first()
+                    setting.setting_value = f"uploads/{filename}"
+                    db.session.commit()
+                    flash("About image updated.")
+            else:
+                flash("Unsupported about image file.")
+            return redirect("/cms")
+
+        if action == "upload_logo":
+            logo_image = request.files.get("site_logo")
+            if logo_image and allowed_file(logo_image.filename):
+                filename = secure_filename(logo_image.filename)
+                if filename:
+                    logo_image.save(os.path.join(basedir, app.config['UPLOAD_FOLDER'], filename))
+                    setting = SiteSetting.query.filter_by(setting_key="site_logo").first()
+                    setting.setting_value = f"uploads/{filename}"
+                    db.session.commit()
+                    flash("Logo updated.")
+            else:
+                flash("Unsupported logo file.")
+            return redirect("/cms")
+
         if action == "upload_gallery":
             files = request.files.getlist("gallery_image")
             caption = request.form.get("caption")
@@ -650,6 +734,19 @@ def cms():
                 flash("No supported gallery files selected.")
             return redirect("/cms")
 
+        if action == "update_home_slider":
+            ids = []
+            selected_values = request.form.getlist("slider_image_ids")
+            for value in selected_values:
+                if value and value.isdigit() and int(value) not in ids:
+                    ids.append(int(value))
+            setting = SiteSetting.query.filter_by(setting_key="home_slider_ids").first()
+            ids = ids[:3]
+            setting.setting_value = ",".join(str(i) for i in ids)
+            db.session.commit()
+            flash("Home slider selection updated.")
+            return redirect("/cms")
+
         if action == "delete_gallery":
             image_id = request.form.get("image_id")
             image = GalleryImage.query.filter_by(id=image_id).first()
@@ -664,12 +761,25 @@ def cms():
     images = GalleryImage.query.order_by(GalleryImage.created_at.desc()).all()
     banner = SiteSetting.query.filter_by(setting_key="banner_image").first()
     home_bg = SiteSetting.query.filter_by(setting_key="home_background_image").first()
+    about_image = SiteSetting.query.filter_by(setting_key="about_image").first()
+    site_phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
+    site_email = SiteSetting.query.filter_by(setting_key="site_email").first()
+    site_logo = SiteSetting.query.filter_by(setting_key="site_logo").first()
+    slider_setting = SiteSetting.query.filter_by(setting_key="home_slider_ids").first()
+    current_slider_ids = []
+    if slider_setting and slider_setting.setting_value:
+        current_slider_ids = [int(x) for x in slider_setting.setting_value.split(",") if x.strip().isdigit()]
     return render_template(
         "cms.html",
         contents=contents,
         gallery_images=images,
         banner_path=banner.setting_value,
-        home_bg_path=home_bg.setting_value
+        home_bg_path=home_bg.setting_value,
+        about_image_path=about_image.setting_value,
+        site_phone=site_phone.setting_value,
+        site_email=site_email.setting_value,
+        site_logo_path=site_logo.setting_value,
+        current_slider_ids=current_slider_ids,
     )
 
 

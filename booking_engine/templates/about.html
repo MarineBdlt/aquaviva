@@ -7,6 +7,9 @@ About
 {% block main %}
 <div class="container">
     <h1 class="text-warning mb-4">{{ about_content.title }}</h1>
+    {% if about_image_path %}
+    <img src="/static/{{ about_image_path }}" alt="About Aqua Viva" class="img-fluid rounded shadow mb-4" style="max-height: 520px; object-fit: cover; width: 100%;">
+    {% endif %}
     <p class="lead text-dark">{{ about_content.body }}</p>
 </div>
 {% endblock %}

@@ -6,32 +6,92 @@ from werkzeug.utils import secure_filename
 from booking_engine import app, db, os, basedir, mail
 from booking_engine.helpers import login_required, allowed_file, usd
 from booking_engine.room_search import single_room_search, multiple_rooms_search_no_children, multiple_rooms_search_children
-from booking_engine.models import Admin, Room, RateType, RatePlan, ListedRoom, RoomAvailability, bookings, Client, Reservation
+from booking_engine.models import Admin, Room, RateType, RatePlan, ListedRoom, RoomAvailability, bookings, Client, Reservation, SiteContent, SiteSetting, GalleryImage
 from datetime import datetime, timedelta
 from iteration_utilities import unique_everseen
 import pandas as pd
 import random
 
 
+def ensure_cms_defaults():
+    db.create_all()
+
+    defaults = {
+        "home": ("Welcome to Aqua Viva", "Discover our rooms and book your next stay in a few clicks."),
+        "about": ("About Aqua Viva", "Aqua Viva is a modern hotel experience focused on comfort and service."),
+        "prices": ("Aqua Viva Prices", "Browse our prices and current offers."),
+        "gallery": ("Aqua Viva Gallery", "Explore our hotel spaces and atmosphere."),
+    }
+
+    for page_key, values in defaults.items():
+        existing = SiteContent.query.filter_by(page_key=page_key).first()
+        if not existing:
+            db.session.add(SiteContent(page_key=page_key, title=values[0], body=values[1]))
+
+    banner = SiteSetting.query.filter_by(setting_key="banner_image").first()
+    if not banner:
+        db.session.add(SiteSetting(setting_key="banner_image", setting_value="images/banner-5.png"))
+
+    db.session.commit()
+
+
+def get_site_content(page_key):
+    content = SiteContent.query.filter_by(page_key=page_key).first()
+    if not content:
+        return {"title": "", "body": ""}
+    return {"title": content.title, "body": content.body}
+
+
+@app.context_processor
+def inject_site_banner():
+    banner = SiteSetting.query.filter_by(setting_key="banner_image").first()
+    banner_path = banner.setting_value if banner else "images/banner-5.png"
+    return {"site_banner_path": banner_path}
+
+
+def get_or_create_single_gite():
+    room = Room.query.order_by(Room.id.asc()).first()
+    if not room:
+        room = Room(
+            name="Gite Aqua Viva",
+            max_guests=4,
+            min_guests=1,
+            max_adults=4,
+            max_children=0,
+            total_of_this_type=1,
+            room_image="",
+            room_description="Gite for up to 4 guests.",
+        )
+        db.session.add(room)
+        db.session.commit()
+    return room
+
+
 # Main index from where the client performs the search
 @app.route("/", methods=["GET", "POST"])
 def index():
+    ensure_cms_defaults()
+    gite = get_or_create_single_gite()
 
     if request.method == "POST":
             
         checkin = datetime.strptime(request.form.get("checkin"), "%d-%m-%Y")
         checkout = datetime.strptime(request.form.get("checkout"), "%d-%m-%Y")
-        rooms_request = int(request.form.get("rooms"))
+        rooms_request = 1
         adults = int(request.form.get("adults"))
-        children = request.form.get("children")
-        first_child = request.form.get('first_child')
-        second_child = request.form.get('second_child')
+        children = "none"
+        first_child = None
+        second_child = None
+
+        if adults < 1 or adults > 4:
+            flash("This gite accepts 1 to 4 guests.")
+            return redirect("/")
 
         day = timedelta(days=1)
         total_days = int((checkout - checkin).days)
 
         # Filter all listed rooms between checkin and checkout that have is_it_available status == True
-        listed_rooms = ListedRoom.query.filter(ListedRoom.listed_date.between(checkin, checkout - day)).join(RoomAvailability).filter(RoomAvailability.is_it_available == 1).all()
+        listed_rooms = ListedRoom.query.filter(ListedRoom.listed_date.between(checkin, checkout - day)).filter(ListedRoom.room_id == gite.id).join(RoomAvailability).filter(RoomAvailability.is_it_available == 1).all()
 
         # First we check if there is any listed room for the client dates
         if not listed_rooms:
@@ -49,7 +109,7 @@ def index():
         elif children == "two":
             total_children = 2
 
-        all_rooms = Room.query.join(ListedRoom).filter(ListedRoom.room_id == Room.id).filter(ListedRoom.listed_date.between(checkin, checkout - day)).all()
+        all_rooms = [gite]
 
         # total guests selected by client
         total_guests = adults + total_children
@@ -97,12 +157,27 @@ def index():
         return redirect("/")
     else:
 
-        return render_template("index.html")
+        images = GalleryImage.query.order_by(GalleryImage.created_at.desc()).all()
+        return render_template("index.html", home_content=get_site_content("home"), hero_images=images)
 
 
 @app.route("/gallery", methods=["GET"])
 def gallery():
-    return render_template("gallery.html")
+    ensure_cms_defaults()
+    images = GalleryImage.query.order_by(GalleryImage.created_at.desc()).all()
+    return render_template("gallery.html", gallery_content=get_site_content("gallery"), gallery_images=images)
+
+
+@app.route("/prices", methods=["GET"])
+def prices():
+    ensure_cms_defaults()
+    return render_template("prices.html", prices_content=get_site_content("prices"))
+
+
+@app.route("/about", methods=["GET"])
+def about():
+    ensure_cms_defaults()
+    return render_template("about.html", about_content=get_site_content("about"))
 
 
 # Handle the client booking information, create client and reservation in db
@@ -321,35 +396,83 @@ def admin_panel():
 
         return render_template("admin_panel.html", clients=clients, rooms=rooms)
 
+
+@app.route("/cms", methods=["GET", "POST"])
+@login_required
+def cms():
+    ensure_cms_defaults()
+
+    if request.method == "POST":
+        action = request.form.get("action")
+
+        if action == "update_content":
+            pages = ("home", "about", "prices", "gallery")
+            for page_key in pages:
+                page = SiteContent.query.filter_by(page_key=page_key).first()
+                page.title = request.form.get(f"{page_key}_title", page.title)
+                page.body = request.form.get(f"{page_key}_body", page.body)
+            db.session.commit()
+            flash("Site texts updated.")
+            return redirect("/cms")
+
+        if action == "upload_banner":
+            banner_image = request.files.get("banner_image")
+            if banner_image and allowed_file(banner_image.filename):
+                filename = secure_filename(banner_image.filename)
+                if filename:
+                    banner_image.save(os.path.join(basedir, app.config['UPLOAD_FOLDER'], filename))
+                    setting = SiteSetting.query.filter_by(setting_key="banner_image").first()
+                    setting.setting_value = f"uploads/{filename}"
+                    db.session.commit()
+                    flash("Banner updated.")
+            else:
+                flash("Unsupported banner file.")
+            return redirect("/cms")
+
+        if action == "upload_gallery":
+            files = request.files.getlist("gallery_image")
+            caption = request.form.get("caption")
+            added = 0
+            for gallery_image in files:
+                if gallery_image and allowed_file(gallery_image.filename):
+                    filename = secure_filename(gallery_image.filename)
+                    if filename:
+                        gallery_image.save(os.path.join(basedir, app.config['UPLOAD_FOLDER'], filename))
+                        db.session.add(GalleryImage(image_file=f"uploads/{filename}", caption=caption))
+                        added += 1
+            if added > 0:
+                db.session.commit()
+                flash(f"{added} gallery image(s) uploaded.")
+            else:
+                flash("No supported gallery files selected.")
+            return redirect("/cms")
+
+        if action == "delete_gallery":
+            image_id = request.form.get("image_id")
+            image = GalleryImage.query.filter_by(id=image_id).first()
+            if image:
+                db.session.delete(image)
+                db.session.commit()
+                flash("Gallery image removed.")
+            return redirect("/cms")
+
+    page_keys = ("home", "about", "prices", "gallery")
+    contents = {k: SiteContent.query.filter_by(page_key=k).first() for k in page_keys}
+    images = GalleryImage.query.order_by(GalleryImage.created_at.desc()).all()
+    banner = SiteSetting.query.filter_by(setting_key="banner_image").first()
+    return render_template("cms.html", contents=contents, gallery_images=images, banner_path=banner.setting_value)
+
+
 # This route handles the room creation process
 @app.route("/create_rooms", methods=["GET", "POST"])
 @login_required
 def create_rooms():
+    room = get_or_create_single_gite()
 
     if request.method == "POST":
-
-        # First we get the management inputed data
-        room_name = request.form.get("room")
-        max_guests = int(request.form.get("max_guests"))
-        min_guests = int(request.form.get("min_guests"))
-        max_adults = int(request.form.get("max_adults"))
-        max_children = int(request.form.get("max_children"))
-        total_rooms = request.form.get("total_rooms")
+        room_name = request.form.get("room") or "Gite Aqua Viva"
         room_image = request.files.get("room_image")
         room_description = request.form.get("room_description")
-
-        # Run some basic checks
-        if max_guests == max_adults and max_children > 0 or max_adults > max_guests:
-            flash("Max capacity exceeded!")
-            return redirect("/create_rooms")
-        
-        if not total_rooms:
-            flash("Total rooms cannot be zero!")
-            return redirect("/create_rooms")
-
-        if min_guests <= 0 or min_guests > max_guests:
-            flash("Minimum guests cannot be negative/0 or higher than max guests!")
-            return redirect("/create_rooms")
         
         room_image_new = ''
 
@@ -362,26 +485,20 @@ def create_rooms():
                 room_image_new = filename
                 flash('succes!')
         
-        room = Room(
-            name = room_name,
-            max_guests = max_guests,
-            min_guests = min_guests,
-            max_adults = max_adults,
-            max_children = max_children,
-            total_of_this_type = int(total_rooms),
-            room_image = room_image_new,
-            room_description = room_description
-        )
-
-        db.session.add(room)
+        room.name = room_name
+        room.max_guests = 4
+        room.min_guests = 1
+        room.max_adults = 4
+        room.max_children = 0
+        room.total_of_this_type = 1
+        if room_image_new:
+            room.room_image = room_image_new
+        room.room_description = room_description
         db.session.commit()
 
         return redirect("/create_rooms")
     else:
-
-        room_info = Room.query.all()
-
-
+        room_info = [room]
         return render_template("create_rooms.html", room_info=room_info)
 
 # Used to delete rooms
@@ -520,18 +637,16 @@ def view_rate_plans():
 @login_required
 def availability():
 
-    all_rooms = Room.query.all()
+    room = get_or_create_single_gite()
+    all_rooms = [room]
     rate_types = RateType.query.all()
 
     if request.method == "POST":
     
-
-        selected_room = request.form.get("selected_room")
         from_date = datetime.strptime(request.form.get("from_date"), "%d-%m-%Y")
         to_date = datetime.strptime(request.form.get("to_date"), "%d-%m-%Y")
         dates = pd.date_range(start=from_date, end=to_date)
 
-        room = Room.query.filter_by(id=selected_room).first()
         listed_rooms = ListedRoom.query.filter(ListedRoom.listed_date.between(from_date, to_date)).filter(ListedRoom.room_id == room.id).join(RoomAvailability).filter(RoomAvailability.listed_room_id == ListedRoom.id).all()
        
   
@@ -587,13 +702,13 @@ def add_room():
 
     if request.method == "POST":
 
-        room_type = request.form.get("selected_room")
+        room = get_or_create_single_gite()
+        room_type = room.id
         rate_name = request.form.get("rate_name")
-        add_room_quantity = int(request.form.get("selected_quantity"))
+        add_room_quantity = 1
         start_date = datetime.strptime(request.form.get("start_date"), "%d-%m-%Y")
         end_date = datetime.strptime(request.form.get("end_date"), "%d-%m-%Y")
-    
-        room = Room.query.filter_by(id=room_type).one()
+
         listed_rooms = ListedRoom.query.filter(ListedRoom.listed_date.between(start_date, end_date)).filter_by(room_id=room_type).all()
 
         if add_room_quantity > room.total_of_this_type:

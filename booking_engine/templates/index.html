@@ -6,6 +6,41 @@
 {% endblock %}
 
 {% block search %}
+<div class="container mb-4">
+    <h1 class="text-warning">{{ home_content.title }}</h1>
+    <p class="lead text-light">{{ home_content.body }}</p>
+</div>
+{% if hero_images and hero_images|length > 0 %}
+<div class="container mb-4">
+    <div id="homeGalleryCarousel" class="carousel slide shadow" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            {% for image in hero_images %}
+            <button type="button" data-bs-target="#homeGalleryCarousel" data-bs-slide-to="{{ loop.index0 }}" class="{{ 'active' if loop.first else '' }}" aria-current="{{ 'true' if loop.first else 'false' }}" aria-label="Slide {{ loop.index }}"></button>
+            {% endfor %}
+        </div>
+        <div class="carousel-inner rounded">
+            {% for image in hero_images %}
+            <div class="carousel-item {{ 'active' if loop.first else '' }}">
+                <img src="/static/{{ image.image_file }}" class="d-block w-100" style="height: 420px; object-fit: cover;" alt="{{ image.caption or 'Aqua Viva' }}">
+                {% if image.caption %}
+                <div class="carousel-caption d-none d-md-block bg-dark bg-opacity-50 rounded p-2">
+                    <p class="mb-0">{{ image.caption }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#homeGalleryCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#homeGalleryCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+</div>
+{% endif %}
 <div class="search-container d-flex flex-column justify-content-center  container p-1">
     
     <div class="container progress-bar-box p-1  border w-75 border-2 border-info">
@@ -42,60 +77,19 @@
                     </div>
                 </div>
 
-                <div class="search-input form d-block">
-                    <label class="text-light"></label>
-                    <select class="search-input form-select text-dark border border-1 shadow" required id="rooms" name="rooms">
-                    <option selected disabled>Rooms</option>
-                    <option value="1">1 Room</option>
-                    <option value="2">2 Rooms</option>
-                    <option value="3">3 Rooms</option>
-                    </select>
-                </div>
+                <input type="hidden" id="rooms" name="rooms" value="1">
 
                 <div class="form d-block">
                     <label class="text-light"></label>
-                    <select class="search-input form-select border border-1 shadow" id="adults" name="adults">
-                    <option selected disabled>Adults</option>
+                    <select class="search-input form-select border border-1 shadow" id="adults" name="adults" required>
+                    <option selected disabled>Guests</option>
                     <option value="1">1 Person</option>
                     <option value="2">2 People</option>
                     <option value="3">3 People</option>
                     <option value="4">4 People</option>
-                    <option value="5">5 People</option>
-                    <option value="6">6 People</option>
                     </select>
                 </div>
-                
-                <div class="form d-block" id="children" >
-                    <label class="text-light"> </label>
-                    <select class="search-input form-select border border-1 shadow" id="children" name="children">
-                        <option selected value="none">Children</option>
-                        <option value="one">One Child</option>
-                        <option value="two">Two Children</option>
-                    </select>
-
-            
-                    <div class="form was-validated one_child" id="first_child">
-                        <label for="exampleFormControlSelect1" >Child</label>
-                        <select class="search-input form-select required1" id="first_child" name="first_child">
-                        <option value="" >Child Age</option>
-                        <option value="0-2">0 - 2 years old</option>
-                        <option value="2-6">2 - 6 years old</option>
-                        <option value="7-12">7 - 11 years old</option>
-                        </select>
-                        <div class="invalid-feedback">Age needed!</div>
-                    </div>
-                
-
-                <div class="form was-validated two_children" id="second_child">
-                    <label for="exampleFormControlSelect1" >Child</label>
-                    <select class="search-input form-select shadow required2" id="second_child" name="second_child">
-                    <option value="">Child Age</option>
-                    <option value="0-2">0 - 2 years old</option>
-                    <option value="2-6">2 - 6 years old</option>
-                    <option value="7-12">7 - 11 years old</option>
-                    </select>
-                    <div class="invalid-feedback">Age needed!</div>
-                </div>
+                <input type="hidden" id="children" name="children" value="none">
                 <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" />        
                 <button class="btn btn-warning bg-gradient mb-3 text-dark border-warning rounded-3 mt-3 shadow" type="submit">SEARCH</button>
             </div>    

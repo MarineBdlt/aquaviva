@@ -18,20 +18,13 @@
     <form class="form p-5 d-flex" action="{{ url_for('add_room') }}" method="post" id="availability_dates">
 
         <div>
-          <select class="form-select d-flex" style="width: 500px; height: 30px;" name="selected_room" id="selected_room">
-            <option selected disabled>Select Room</option>
-            {% for rm in all_rooms %}
-              <option value="{{ rm.id }}">{{ rm.name }}</option>
-            {% endfor %}
-          </select>
           <select class="form-select d-flex mt-2" style="width: 500px; height: 30px;" name="rate_name" id="rate_name">
             <option selected disabled>Select Rate plan</option>
             {% for rate_type in rate_types %}
             <option value="{{ rate_type.id }}">{{ rate_type.rate_name }}</option>
             {% endfor %}
           </select>
-          <p class="mt-2">Room quantity</p>
-          <input class="number" type="number" min="1" max="10" id="selected_quantity" name="selected_quantity">
+          <p class="mt-2">Single gite mode: quantity fixed to 1.</p>
         </div>
         
         
@@ -66,14 +59,7 @@
     <form class="form p-1" action="{{ url_for('availability') }}" method="POST" id="availability_dates">
         
 
-        <div>
-          <select class="form-select mb-3 mt-3 mx-5" style="width: 500px; height: 30px;" name="selected_room" id="selected_room">
-            <option selected disabled>Select Room</option>
-            {% for rm in all_rooms %}
-              <option value="{{ rm.id }}">{{ rm.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
+        <div class="mb-3 mt-3 mx-5"><strong>Single gite calendar</strong></div>
 
         <div class="row d-flex justify-content-start">
             <div class="dates_rate_plans d-flex shadow mb-4">

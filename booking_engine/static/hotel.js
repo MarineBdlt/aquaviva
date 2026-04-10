@@ -1,19 +1,5 @@
 
-    // const & function for button animation
-    const toggler_button = document.querySelector('.navbar-toggler');
-    const drop_down = document.querySelector('.collapse');
-    const button_icon = document.querySelector('.navbar-toggler-icon');
-
-    if (toggler_button && drop_down && button_icon) {
-      toggler_button.onclick = function() {
-        drop_down.classList.toggle('open');
-        const isOpen = drop_down.classList.contains('open');
-
-        button_icon.className = isOpen
-          ? 'navbar-toggler-icon fa-solid fa-xmark'
-          : 'navbar-toggler-icon fa-solid fa-bars';
-      };
-    }
+    // Navbar toggling is handled by Bootstrap's native collapse script.
  
  // function to show or hide children select forms based on how many children have been selected
  $(function toggle_display(){
@@ -198,10 +184,9 @@ $(document).ready(function(){
 
     
 
-let table = new DataTable('#reservations_table');
-$(document).ready(function () {
-    $('#example').DataTable();
-});
+if (typeof DataTable !== "undefined" && document.querySelector('#reservations_table')) {
+    new DataTable('#reservations_table');
+}
 
 
 

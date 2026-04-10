@@ -74,7 +74,7 @@
     </div>
 
 
-    <div class="bg-img" id="overlay">
+    <div class="bg-img" id="overlay" style="background-image: url('/static/{{ site_banner_path }}');">
         <!-- NavBar -->
             <section>
                 <nav class="navbar navbar-expand-lg navbar-light bg-dark shadow-lg bg-opacity-50  border-bottom border-warning ">
@@ -97,6 +97,7 @@
                         <ul class="navbar-nav ms-auto">
                             <li class="{{'active' if active_page == 'reservations'}}"><a class="nav-link" href="/admin_panel">Reservations</a></li>
                             <li class="{{'active' if active_page == 'create_rooms'}}" id="create_rooms"><a class="nav-link" href="/create_rooms" >Create Rooms</a></li>
+                            <li class="{{'active' if active_page == 'cms'}}"><a class="nav-link" href="/cms">CMS</a></li>
                             <!--<li class="{{'active' if active_page == 'rate_plans'}}"><a class="nav-link" href="/rate_plans">Rate Plans</a></li>-->
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle {{'active' if active_page == 'rate_plans'}}" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -117,9 +118,9 @@
                         <ul class="navbar-nav ms-auto mt-2">
                             <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
                             <li class="nav-item"><a class="nav-link" href="/gallery">Gallery</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/">Prices</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/prices">Prices</a></li>
                             <li class="nav-item {{'active' if active_page == 'reservation'}}"><a class="nav-link" href="/">Reservation</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/admin_login">About</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
                             <li class="nav-item"><a class="nav-link" href="/admin_register">Register</a></li>
                             <li class="nav-item mx-5"><a class="nav-link" href="/admin_login">Login</a></li>
                         </ul>

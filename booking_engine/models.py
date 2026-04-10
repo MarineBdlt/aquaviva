@@ -106,3 +106,23 @@ class Reservation(db.Model):
     # Foreign key to link reservation with room
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'))
 
+
+class SiteContent(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    page_key = db.Column(db.String(50), unique=True, nullable=False)
+    title = db.Column(db.String(255), nullable=False, default="")
+    body = db.Column(db.Text, nullable=False, default="")
+
+
+class SiteSetting(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    setting_key = db.Column(db.String(50), unique=True, nullable=False)
+    setting_value = db.Column(db.String(255), nullable=False, default="")
+
+
+class GalleryImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    image_file = db.Column(db.String(255), nullable=False)
+    caption = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+

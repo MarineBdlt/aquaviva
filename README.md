@@ -1,4 +1,4 @@
-# Hotel booking Web app with Flask
+# Aqua Viva
 #### Video Demo:  <https://www.youtube.com/watch?v=DPIXv9mg8Is>
 #### Description:
 

@@ -100,6 +100,11 @@ def index():
         return render_template("index.html")
 
 
+@app.route("/gallery", methods=["GET"])
+def gallery():
+    return render_template("gallery.html")
+
+
 # Handle the client booking information, create client and reservation in db
 @app.route("/booking_request", methods=["GET", "POST"])
 def booking_request():

@@ -1,3 +1,12 @@
+:root {
+  --av-primary: #0f4c5c;
+  --av-primary-soft: #1b6475;
+  --av-accent: #f4b942;
+  --av-text-light: #f6f7f9;
+  --av-surface: rgba(255, 255, 255, 0.9);
+  --av-border: #d6dee3;
+}
+
 .dates {
     
   margin-right: 25px;
@@ -313,4 +322,62 @@ background-color:aquamarine;
   padding: 8px 12px;
   font-size: 14px;
   color: black;
+}
+
+/* Global visual coherence overrides */
+body {
+  color: #1f2a33;
+}
+
+.navbar.navbar-expand-lg {
+  background-color: rgba(15, 76, 92, 0.78) !important;
+  border-bottom-color: var(--av-accent) !important;
+}
+
+.nav-link {
+  color: var(--av-text-light) !important;
+}
+
+.nav-link:hover {
+  color: #ffffff !important;
+}
+
+.active {
+  background-color: rgba(244, 185, 66, 0.95);
+  -webkit-text-fill-color: #1f2a33;
+}
+
+.text-headings-box {
+  background-color: rgba(15, 76, 92, 0.88) !important;
+  border-radius: 10px;
+  border: 1px solid rgba(244, 185, 66, 0.55);
+}
+
+.text-headings-box .text-warning,
+h1.text-warning,
+h2.text-warning,
+h3.text-warning,
+h4.text-warning {
+  color: var(--av-accent) !important;
+}
+
+.admin-panel-box,
+.search-form,
+.progress-bar-box,
+.card,
+.booking-card,
+.form-holder {
+  background-color: var(--av-surface) !important;
+  border-color: var(--av-border) !important;
+}
+
+.btn-warning {
+  background-color: var(--av-accent) !important;
+  border-color: var(--av-accent) !important;
+  color: #1f2a33 !important;
+}
+
+.btn-primary {
+  background-color: var(--av-primary-soft) !important;
+  border-color: var(--av-primary-soft) !important;
 }

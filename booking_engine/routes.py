@@ -8,6 +8,7 @@ from booking_engine.helpers import login_required, allowed_file, usd
 from booking_engine.room_search import single_room_search, multiple_rooms_search_no_children, multiple_rooms_search_children
 from booking_engine.models import Admin, Room, RateType, RatePlan, ListedRoom, RoomAvailability, bookings, Client, Reservation, SiteContent, SiteSetting, GalleryImage
 from datetime import datetime, timedelta
+import calendar
 from iteration_utilities import unique_everseen
 import pandas as pd
 import random
@@ -31,6 +32,9 @@ def ensure_cms_defaults():
     banner = SiteSetting.query.filter_by(setting_key="banner_image").first()
     if not banner:
         db.session.add(SiteSetting(setting_key="banner_image", setting_value="images/banner-5.png"))
+    home_background = SiteSetting.query.filter_by(setting_key="home_background_image").first()
+    if not home_background:
+        db.session.add(SiteSetting(setting_key="home_background_image", setting_value=""))
 
     db.session.commit()
 
@@ -45,7 +49,11 @@ def get_site_content(page_key):
 @app.context_processor
 def inject_site_banner():
     banner = SiteSetting.query.filter_by(setting_key="banner_image").first()
+    home_background = SiteSetting.query.filter_by(setting_key="home_background_image").first()
     banner_path = banner.setting_value if banner else "images/banner-5.png"
+    home_bg_path = home_background.setting_value if home_background else ""
+    if request.path == "/" and home_bg_path:
+        return {"site_banner_path": home_bg_path}
     return {"site_banner_path": banner_path}
 
 
@@ -65,6 +73,33 @@ def get_or_create_single_gite():
         db.session.add(room)
         db.session.commit()
     return room
+
+
+def ensure_room_availability_rows(room, start_date, end_date):
+    """Ensure listed_room and availability rows exist for each date."""
+    day = timedelta(days=1)
+    current = start_date
+    while current <= end_date:
+        listed_room = ListedRoom.query.filter_by(room_id=room.id, listed_date=current).first()
+        if not listed_room:
+            listed_room = ListedRoom(
+                listed_date=current,
+                quantity_per_date=1,
+                rate_type_id=None,
+                room_id=room.id,
+            )
+            db.session.add(listed_room)
+            db.session.flush()
+            db.session.add(
+                RoomAvailability(
+                    left_to_sell=1,
+                    booked_quantity=0,
+                    listed_room_id=listed_room.id,
+                    is_it_available=1,
+                )
+            )
+        current += day
+    db.session.commit()
 
 
 # Main index from where the client performs the search
@@ -388,13 +423,167 @@ def admin_panel():
         pass
 
     else:
+        room = get_or_create_single_gite()
+        month_param = request.args.get("month")
+        today = datetime.now().date()
+        if month_param:
+            try:
+                month_start = datetime.strptime(month_param, "%Y-%m").date().replace(day=1)
+            except ValueError:
+                month_start = today.replace(day=1)
+        else:
+            month_start = today.replace(day=1)
+
+        if month_start.month == 12:
+            next_month_start = month_start.replace(year=month_start.year + 1, month=1, day=1)
+        else:
+            next_month_start = month_start.replace(month=month_start.month + 1, day=1)
+        month_end = next_month_start - timedelta(days=1)
+
+        if month_start.month == 1:
+            prev_month_start = month_start.replace(year=month_start.year - 1, month=12, day=1)
+        else:
+            prev_month_start = month_start.replace(month=month_start.month - 1, day=1)
+
+        start_date = month_start
+        end_date = month_end
+        ensure_room_availability_rows(room, start_date, end_date)
 
         clients = Client.query.all()
         rooms = Room.query.all()
+        dates = pd.date_range(start=start_date, end=end_date)
+        listed_rooms = ListedRoom.query.filter(
+            ListedRoom.listed_date.between(start_date, end_date),
+            ListedRoom.room_id == room.id
+        ).join(RoomAvailability).all()
+
+        availability_map = {}
+        for listed in listed_rooms:
+            if listed.room_availability:
+                availability_map[listed.listed_date.date()] = listed.room_availability[0]
+
+        reservations = Reservation.query.filter(Reservation.room_id == room.id).all()
+        checkin_map = {}
+        checkout_map = {}
+        occupied_dates = set()
+        occupied_map = {}
+        for res in reservations:
+            check_in_date = res.check_in.date()
+            check_out_date = res.check_out.date()
+            checkin_map[check_in_date] = res
+            checkout_map[check_out_date] = res
+            current = check_in_date
+            while current < check_out_date:
+                occupied_dates.add(current)
+                occupied_map[current] = res
+                current += timedelta(days=1)
+
+        cal = calendar.Calendar(firstweekday=0)
+        month_weeks = cal.monthdatescalendar(month_start.year, month_start.month)
 
     
+        return render_template(
+            "admin_panel.html",
+            clients=clients,
+            rooms=rooms,
+            room=room,
+            dates=dates,
+            availability_map=availability_map,
+            today=today,
+            month_label=month_start.strftime("%B %Y"),
+            prev_month=prev_month_start.strftime("%Y-%m"),
+            next_month=next_month_start.strftime("%Y-%m"),
+            month_weeks=month_weeks,
+            current_month=month_start.month,
+            checkin_map=checkin_map,
+            checkout_map=checkout_map,
+            occupied_dates=occupied_dates,
+            occupied_map=occupied_map,
+            current_month_query=month_start.strftime("%Y-%m"),
+        )
 
-        return render_template("admin_panel.html", clients=clients, rooms=rooms)
+
+@app.route("/admin_manual_reservation", methods=["POST"])
+@login_required
+def admin_manual_reservation():
+    room = get_or_create_single_gite()
+    check_in = datetime.strptime(request.form.get("check_in"), "%d-%m-%Y")
+    check_out_raw = request.form.get("check_out")
+    if check_out_raw:
+        check_out = datetime.strptime(check_out_raw, "%d-%m-%Y")
+        nights = (check_out - check_in).days
+    else:
+        nights = int(request.form.get("nights") or 1)
+        check_out = check_in + timedelta(days=nights)
+
+    return_month = request.form.get("return_month", datetime.now().strftime("%Y-%m"))
+    panel_redirect = f"/admin_panel?month={return_month}#reservations-anchor"
+
+    if nights < 1 or check_out <= check_in:
+        flash("Check-out must be after check-in.")
+        return redirect(panel_redirect)
+    listed_rooms = ListedRoom.query.filter(
+        ListedRoom.listed_date.between(check_in, check_out - timedelta(days=1)),
+        ListedRoom.room_id == room.id
+    ).all()
+    if len(listed_rooms) != nights:
+        ensure_room_availability_rows(room, check_in.date(), (check_out - timedelta(days=1)).date())
+        listed_rooms = ListedRoom.query.filter(
+            ListedRoom.listed_date.between(check_in, check_out - timedelta(days=1)),
+            ListedRoom.room_id == room.id
+        ).all()
+
+    for listed in listed_rooms:
+        availability = RoomAvailability.query.filter_by(listed_room_id=listed.id).first()
+        if not availability or availability.left_to_sell <= 0 or availability.is_it_available == 0:
+            flash("Selected period is not available.")
+            return redirect(panel_redirect)
+
+    email = request.form.get("email")
+    client = Client.query.filter_by(email=email).first()
+    if not client:
+        client = Client(
+            first_name=request.form.get("first_name"),
+            last_name=request.form.get("last_name"),
+            email=email,
+            phone_number=request.form.get("phone"),
+        )
+        db.session.add(client)
+        db.session.flush()
+
+    reservation_number = random.randint(1000, 9999) + int(datetime.now().strftime('%Y%m%d%H%M%S'))
+    total_adults = int(request.form.get("adults") or 1)
+    total_guests = total_adults
+    room_price_day = int(request.form.get("price_per_day") or 0)
+    total_price = room_price_day * nights
+
+    reservation = Reservation(
+        reservation_number=reservation_number,
+        check_in=check_in,
+        check_out=check_out,
+        total_days=nights,
+        total_rooms_reserved=1,
+        total_guests=total_guests,
+        total_adults=total_adults,
+        total_children=0,
+        children_age="",
+        room_price_day=room_price_day,
+        all_rooms_price_day=room_price_day,
+        total_price=total_price,
+        room_id=room.id,
+    )
+    client.reservation.append(reservation)
+
+    for listed in listed_rooms:
+        availability = RoomAvailability.query.filter_by(listed_room_id=listed.id).first()
+        availability.booked_quantity = (availability.booked_quantity or 0) + 1
+        availability.left_to_sell = max(0, availability.left_to_sell - 1)
+        if availability.left_to_sell == 0:
+            availability.is_it_available = 0
+
+    db.session.commit()
+    flash("Manual reservation added.")
+    return redirect(panel_redirect)
 
 
 @app.route("/cms", methods=["GET", "POST"])
@@ -429,6 +618,20 @@ def cms():
                 flash("Unsupported banner file.")
             return redirect("/cms")
 
+        if action == "upload_home_background":
+            home_bg_image = request.files.get("home_bg_image")
+            if home_bg_image and allowed_file(home_bg_image.filename):
+                filename = secure_filename(home_bg_image.filename)
+                if filename:
+                    home_bg_image.save(os.path.join(basedir, app.config['UPLOAD_FOLDER'], filename))
+                    setting = SiteSetting.query.filter_by(setting_key="home_background_image").first()
+                    setting.setting_value = f"uploads/{filename}"
+                    db.session.commit()
+                    flash("Home background updated.")
+            else:
+                flash("Unsupported home background file.")
+            return redirect("/cms")
+
         if action == "upload_gallery":
             files = request.files.getlist("gallery_image")
             caption = request.form.get("caption")
@@ -460,7 +663,14 @@ def cms():
     contents = {k: SiteContent.query.filter_by(page_key=k).first() for k in page_keys}
     images = GalleryImage.query.order_by(GalleryImage.created_at.desc()).all()
     banner = SiteSetting.query.filter_by(setting_key="banner_image").first()
-    return render_template("cms.html", contents=contents, gallery_images=images, banner_path=banner.setting_value)
+    home_bg = SiteSetting.query.filter_by(setting_key="home_background_image").first()
+    return render_template(
+        "cms.html",
+        contents=contents,
+        gallery_images=images,
+        banner_path=banner.setting_value,
+        home_bg_path=home_bg.setting_value
+    )
 
 
 # This route handles the room creation process

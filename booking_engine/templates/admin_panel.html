@@ -6,10 +6,129 @@
 {% endblock %}
 
 {% block reservations %}
+<style>
+  .js-day-pick {
+    cursor: pointer !important;
+    transition: background-color 0.12s ease;
+  }
 
+  .js-day-pick.bg-success:hover {
+    background-color: #b8e0c2 !important;
+  }
+
+  .js-day-pick.bg-danger:hover {
+    background-color: #efc2c7 !important;
+  }
+
+  .js-day-pick.bg-light:hover {
+    background-color: #edf0f2 !important;
+  }
+</style>
+
+<div id="reservations-anchor"></div>
 <div class="text-headings-box container bg-secondary bg-gradient bg-opacity-75">
     <h1 class="text-warning">RESERVATIONS</h1>
 </div>
+
+<div class="container-fluid mt-4 mb-4">
+    <div class="text-headings-box container bg-secondary bg-gradient bg-opacity-75">
+        <h3 class="text-warning">CALENDAR - {{ room.name }}</h3>
+    </div>
+    <div class="container d-flex justify-content-between align-items-center bg-light border border-info shadow p-2 mt-2">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin_panel', month=prev_month) }}#reservations-anchor">← Previous month</a>
+        <strong>{{ month_label }}</strong>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('admin_panel', month=next_month) }}#reservations-anchor">Next month →</a>
+    </div>
+    <div class="bg-light p-3 border border-info shadow mt-2">
+        <table class="table table-bordered text-center align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Mon</th>
+                    <th>Tue</th>
+                    <th>Wed</th>
+                    <th>Thu</th>
+                    <th>Fri</th>
+                    <th>Sat</th>
+                    <th>Sun</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for week in month_weeks %}
+                <tr>
+                    {% for date in week %}
+                    {% set in_month = (date.month == current_month) %}
+                    {% set cell = availability_map.get(date) %}
+                    {% set is_occupied = (date in occupied_dates) %}
+                    {% set is_checkin = (date in checkin_map) %}
+                    {% set is_checkout = (date in checkout_map) %}
+                    {% set occ_res = occupied_map.get(date) %}
+                    <td
+                        class="
+                            {% if in_month and cell and cell.left_to_sell > 0 and cell.is_it_available == 1 and not is_occupied %}js-day-pick{% endif %}
+                            {% if not in_month %}bg-light text-muted{% endif %}
+                            {% if date == today %}table-warning{% endif %}
+                            {% if in_month and cell and cell.left_to_sell > 0 and cell.is_it_available == 1 %}bg-success bg-opacity-25{% endif %}
+                            {% if in_month and (not cell or cell.left_to_sell == 0 or cell.is_it_available == 0) %}bg-danger bg-opacity-25{% endif %}
+                            {% if in_month and is_occupied %}bg-danger bg-opacity-50{% endif %}
+                        "
+                        style="height: 110px; width: 14.2%; vertical-align: top; cursor: {% if in_month and cell and cell.left_to_sell > 0 and cell.is_it_available == 1 and not is_occupied %}pointer{% else %}default{% endif %};"
+                        {% if in_month and cell and cell.left_to_sell > 0 and cell.is_it_available == 1 and not is_occupied %}data-date="{{ date.strftime('%d-%m-%Y') }}" title="Click to set check-in date"{% endif %}
+                        {% if in_month and occ_res %}title="Reservation #{{ occ_res.reservation_number }} - {{ occ_res.check_in.strftime('%d-%m-%Y') }} to {{ occ_res.check_out.strftime('%d-%m-%Y') }}"{% endif %}
+                    >
+                        <div class="d-flex justify-content-between">
+                            <strong>{{ date.day }}</strong>
+                            {% if date == today %}<span class="badge bg-dark">Today</span>{% endif %}
+                        </div>
+                        {% if in_month and is_checkin %}
+                        <span class="badge bg-primary mt-2">Entrée</span>
+                        {% endif %}
+                        {% if in_month and is_checkout %}
+                        <span class="badge bg-info text-dark mt-2">Sortie</span>
+                        {% endif %}
+                        {% if in_month and occ_res %}
+                        <div class="mt-1 small text-dark">
+                          #{{ occ_res.reservation_number }}
+                        </div>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="text-headings-box container bg-secondary bg-gradient bg-opacity-75 mb-2">
+        <h3 class="text-warning">ADD MANUAL RESERVATION</h3>
+    </div>
+    <form action="{{ url_for('admin_manual_reservation') }}" method="post" class="bg-light border border-info shadow p-3">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="return_month" value="{{ current_month_query }}" />
+        <div class="row g-2">
+            <div class="col-md-2"><input class="form-control" name="check_in" id="manual_check_in" placeholder="Check-in dd-mm-yyyy" required></div>
+            <div class="col-md-2"><input class="form-control" name="check_out" id="manual_check_out" placeholder="Check-out dd-mm-yyyy" required></div>
+            <div class="col-md-2"><input class="form-control" name="first_name" placeholder="First name" required></div>
+            <div class="col-md-2"><input class="form-control" name="last_name" placeholder="Last name" required></div>
+            <div class="col-md-2"><input class="form-control" name="email" type="email" placeholder="Email" required></div>
+            <div class="col-md-2"><input class="form-control" name="phone" placeholder="Phone" required></div>
+            <div class="col-md-1"><input class="form-control" name="adults" type="number" min="1" max="4" value="2" required></div>
+            <div class="col-md-2 mt-2"><input class="form-control" name="price_per_day" type="number" min="0" value="0" placeholder="Price/day"></div>
+        </div>
+        <button class="btn btn-warning mt-3" type="submit">Create reservation</button>
+    </form>
+</div>
+
+<script>
+document.querySelectorAll('.js-day-pick').forEach((cell) => {
+  cell.addEventListener('click', () => {
+    const input = document.getElementById('manual_check_in');
+    input.value = cell.dataset.date;
+    input.focus();
+  });
+});
+</script>
 
 
     <table class="" id="reservations_table" class="display mb-5" style="width:100%">

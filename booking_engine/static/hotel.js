@@ -1,16 +1,18 @@
 
     // const & function for button animation
-    const toggler_button = document.querySelector('.navbar-toggler')
-    const drop_down = document.querySelector('.collapse')
-    const button_icon = document.querySelector('.navbar-toggler-icon')
-   
-    toggler_button.onclick = function() {
-       drop_down.classList.toggle('open')
-       const isOpen = drop_down.classList.contains('open')
-   
-       button_icon.classList = isOpen
-       ? 'fa-solid fa-xmark'
-       : 'fa-solid fa-bars'
+    const toggler_button = document.querySelector('.navbar-toggler');
+    const drop_down = document.querySelector('.collapse');
+    const button_icon = document.querySelector('.navbar-toggler-icon');
+
+    if (toggler_button && drop_down && button_icon) {
+      toggler_button.onclick = function() {
+        drop_down.classList.toggle('open');
+        const isOpen = drop_down.classList.contains('open');
+
+        button_icon.className = isOpen
+          ? 'navbar-toggler-icon fa-solid fa-xmark'
+          : 'navbar-toggler-icon fa-solid fa-bars';
+      };
     }
  
  // function to show or hide children select forms based on how many children have been selected

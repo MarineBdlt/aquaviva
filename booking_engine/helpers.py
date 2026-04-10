@@ -6,6 +6,15 @@ from flask import redirect, render_template, request, session
 from functools import wraps
 from booking_engine import ALLOWED_EXTENSIONS
 
+
+def usd(value):
+    """Format value as USD."""
+    try:
+        return f"${value:,.2f}"
+    except:
+        return value
+
+
 # Borrowing this code 'login_required' from cs50x course, week9 problem set Finance
 # Becouse is very handy and i like it :D thanks!
 def login_required(f):

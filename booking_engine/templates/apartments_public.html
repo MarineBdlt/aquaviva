@@ -1,0 +1,162 @@
+{% extends "layout.html" %}
+{% from "macros/pencil_icons.html" import pencil_icon, section_title %}
+{% set active_page = "apartments" %}
+
+{% block title %}
+{{ _('title.apartments') }}
+{% endblock %}
+
+{% block meta_description %}{{ _('meta.apartments_description') }}{% endblock %}
+{% block og_title %}{{ _('title.apartments') }} — Villa Aqua Viva{% endblock %}
+{% block canonical %}{{ url_for('apartments_public', _external=True) }}{% endblock %}
+
+{% block main %}
+<style>
+  .apt-cal td { height: 72px; width: 14.2%; vertical-align: top; font-size: 0.9rem; }
+</style>
+
+<div class="container text-start">
+    {{ section_title('apartments', _('apt.heading')) }}
+    <p class="mb-4">{{ _('apt.intro') }}</p>
+
+    {% if calendars %}
+    <div class="d-flex justify-content-between align-items-center bg-light border border-info shadow p-2 mb-4">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('apartments_public', month=prev_month) }}">{{ _('apt.prev_month') }}</a>
+        <strong>{{ month_label }}</strong>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('apartments_public', month=next_month) }}">{{ _('apt.next_month') }}</a>
+    </div>
+    <p class="small mb-4">
+        <span class="badge bg-success bg-opacity-50 text-dark">{{ _('apt.free') }}</span>
+        <span class="badge bg-danger bg-opacity-50 text-dark">{{ _('apt.reserved') }}</span>
+        <span class="badge bg-primary">{{ _('apt.checkin') }}</span>
+        <span class="badge bg-info text-dark">{{ _('apt.checkout') }}</span>
+    </p>
+
+    <div class="row g-4">
+        {% for cal in calendars %}
+        {% set apartment = cal.apartment %}
+        <div class="col-12" id="apt-{{ apartment.id }}" style="scroll-margin-top: 100px;">
+            <div class="card shadow-sm">
+                <div class="row g-0">
+                    <div class="col-lg-5">
+                        {% if apartment.images %}
+                        <div id="aptCarousel{{ apartment.id }}" class="carousel slide h-100" data-bs-ride="carousel">
+                            <div class="carousel-inner h-100">
+                                {% for image in apartment.images %}
+                                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                                    <img src="/static/{{ image.image_file }}" class="d-block w-100" alt="{{ image.caption or apartment.name }}" style="height: 280px; object-fit: cover;" />
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if apartment.images|length > 1 %}
+                            <button class="carousel-control-prev" type="button" data-bs-target="#aptCarousel{{ apartment.id }}" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#aptCarousel{{ apartment.id }}" data-bs-slide="next">
+                                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% else %}
+                        <img src="{{ url_for('static', filename='uploads/stock_room_image.jpeg') }}" class="img-fluid w-100" alt="{{ apartment.name }}" style="height: 280px; object-fit: cover;" />
+                        {% endif %}
+                    </div>
+                    <div class="col-lg-7">
+                        <div class="card-body">
+                            <h3 class="h4">{{ apartment.name }}</h3>
+                            <p class="mb-2">
+                                <strong>{{ apartment.bedrooms }}</strong>
+                                {% if apartment.bedrooms > 1 %}{{ _('home.bedrooms') }}{% else %}{{ _('home.bedroom') }}{% endif %}
+                                · <strong>{{ cal.effective_rate }} €</strong> {{ _('home.per_night') }}
+                                {% if cal.is_monthly_override %}
+                                <span class="badge bg-warning text-dark">{{ month_label }}</span>
+                                {% endif %}
+                            </p>
+                            {% if apartment.description %}
+                            <p class="card-text">{{ apartment.description }}</p>
+                            {% endif %}
+
+                            <h5 class="mt-3 mb-2 d-flex align-items-center gap-2">
+                                {{ pencil_icon('home', 28) }}
+                                <span>{{ villa.amenities.title }}</span>
+                            </h5>
+                            <div class="row g-2 mb-3">
+                                {% for amenity in villa.amenities.list %}
+                                <div class="col-sm-6">
+                                    <div class="d-flex align-items-center gap-2 small py-1 pencil-amenity">
+                                        {{ pencil_icon(amenity.icon, 28) }}
+                                        <span>{{ amenity.label }}</span>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <h5 class="mt-3 mb-2 d-flex align-items-center gap-2">
+                                {{ pencil_icon('calendar', 28) }}
+                                <span>{{ _('apt.calendar') }}</span>
+                            </h5>
+                            <div class="table-responsive">
+                                <table class="table table-bordered text-center align-middle mb-0 apt-cal">
+                                    <thead>
+                                        <tr>
+                                            <th>{{ _('apt.mon') }}</th>
+                                            <th>{{ _('apt.tue') }}</th>
+                                            <th>{{ _('apt.wed') }}</th>
+                                            <th>{{ _('apt.thu') }}</th>
+                                            <th>{{ _('apt.fri') }}</th>
+                                            <th>{{ _('apt.sat') }}</th>
+                                            <th>{{ _('apt.sun') }}</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for week in cal.month_weeks %}
+                                        <tr>
+                                            {% for date in week %}
+                                            {% set in_month = (date.month == current_month) %}
+                                            {% set is_occupied = (date in cal.occupied_dates) %}
+                                            {% set is_checkin = (date in cal.checkin_map) %}
+                                            {% set is_checkout = (date in cal.checkout_map) %}
+                                            <td
+                                                class="
+                                                    {% if in_month and not is_occupied %}bg-success bg-opacity-25{% endif %}
+                                                    {% if not in_month %}bg-light text-muted{% endif %}
+                                                    {% if date == today %}table-warning{% endif %}
+                                                    {% if in_month and is_occupied %}bg-danger bg-opacity-50{% endif %}
+                                                "
+                                            >
+                                                <strong>{{ date.day }}</strong>
+                                                {% if in_month and is_checkin %}
+                                                <div><span class="badge bg-primary">{{ _('apt.checkin') }}</span></div>
+                                                {% endif %}
+                                                {% if in_month and is_checkout %}
+                                                <div><span class="badge bg-info text-dark">{{ _('apt.checkout') }}</span></div>
+                                                {% endif %}
+                                                {% if in_month and is_occupied and not is_checkout %}
+                                                <div class="small">{{ _('apt.reserved') }}</div>
+                                                {% endif %}
+                                            </td>
+                                            {% endfor %}
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">{{ _('apt.none') }}</p>
+    {% endif %}
+    <p class="mt-4 mb-0">
+        <a class="av-inline-link" href="{{ url_for('index') }}#appartements">{{ _('nav.home') }} →</a>
+        · <a class="av-inline-link" href="{{ url_for('prices') }}">{{ _('nav.prices') }} →</a>
+        · <a class="av-inline-link" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp →</a>
+    </p>
+</div>
+{% endblock %}

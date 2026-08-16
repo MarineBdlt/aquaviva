@@ -1,10 +1,20 @@
-# Do not track venv folder
-env
+# Virtualenvs
 env/
-venv
 venv/
-.venv
 .venv/
 
+# Secrets
 .env
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Local / OS
+.DS_Store
+*.odg
+
+# Scratch / screenshots not used by the app
+83f3ceb8-*.png

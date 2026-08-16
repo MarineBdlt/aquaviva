@@ -1,15 +1,40 @@
 {% extends "layout.html" %}
+{% from "macros/pencil_icons.html" import section_title %}
 
 {% block title %}
-About
+{{ _('title.about') }}
 {% endblock %}
 
+{% block meta_description %}{{ about_content.body|striptags|truncate(155, True, '…') }}{% endblock %}
+{% block og_title %}{{ about_content.title }} — Villa Aqua Viva{% endblock %}
+{% block canonical %}{{ url_for('about', _external=True) }}{% endblock %}
+
 {% block main %}
-<div class="container">
-    <h1 class="text-warning mb-4">{{ about_content.title }}</h1>
+<div class="container text-start">
+    {{ section_title('about', about_content.title, 'h1') }}
     {% if about_image_path %}
-    <img src="/static/{{ about_image_path }}" alt="About Aqua Viva" class="img-fluid rounded shadow mb-4" style="max-height: 520px; object-fit: cover; width: 100%;">
+    <div class="text-center mb-4">
+        <figure class="postcard-frame postcard-frame--family postcard-frame--lg d-inline-block mb-0">
+            <img
+                src="/static/{{ about_image_path }}"
+                alt="{{ about_content.title }}"
+                class="postcard-frame-img"
+            />
+        </figure>
+    </div>
     {% endif %}
-    <p class="lead text-dark">{{ about_content.body }}</p>
+    <div class="lead text-dark about-body">
+        {% for paragraph in about_content.body.split('\n\n') %}
+        {% if paragraph.strip() %}
+        <p>{{ paragraph.strip() }}</p>
+        {% endif %}
+        {% endfor %}
+    </div>
+    <p class="mt-4 mb-0">
+        <a class="av-inline-link" href="{{ url_for('index') }}#localisation">{{ _('home.shortcut_location') }} →</a>
+        · <a class="av-inline-link" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }} →</a>
+        · <a class="av-inline-link" href="{{ url_for('prices') }}">{{ _('nav.prices') }} →</a>
+        · <a class="av-inline-link" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp →</a>
+    </p>
 </div>
 {% endblock %}

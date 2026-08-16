@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+{% set active_page = "apartments" %}
+
+{% block title %}
+Appartements
+{% endblock %}
+
+{% block main %}
+<div class="container text-start">
+    <h2 class="text-warning mb-2">Appartements à louer</h2>
+    <p class="mb-4">Gérez les appartements de la villa Aqua Viva : chambres, tarif et photos.</p>
+
+    <div class="card p-3 mb-4">
+        <h4>Ajouter un appartement</h4>
+        <form action="{{ url_for('manage_apartments') }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="create" />
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label" for="name">Nom</label>
+                    <input class="form-control" id="name" type="text" name="name" placeholder="ex. Appartement Mimosa" required />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label" for="bedrooms">Chambres</label>
+                    <input class="form-control" id="bedrooms" type="number" name="bedrooms" min="1" step="1" value="1" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label" for="rate">Tarif par défaut (€ / nuit)</label>
+                    <input class="form-control" id="rate" type="number" name="rate" min="0" step="1" placeholder="ex. 120" required />
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label" for="description">Description</label>
+                    <textarea class="form-control" id="description" name="description" rows="3" placeholder="Description de l'appartement (optionnel)"></textarea>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label" for="photos">Photos</label>
+                    <input class="form-control" id="photos" type="file" name="photos" accept=".png,.jpg,.jpeg,.gif" multiple />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="photo_caption">Légende (optionnel)</label>
+                    <input class="form-control" id="photo_caption" type="text" name="photo_caption" placeholder="Légende des photos" />
+                </div>
+            </div>
+            <button class="btn btn-warning mt-3" type="submit">Ajouter l'appartement</button>
+        </form>
+    </div>
+
+    {% if apartments %}
+    <h3 class="text-warning mb-3">Appartements ({{ apartments|length }})</h3>
+    {% for apartment in apartments %}
+    <div class="card p-3 mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+            <div>
+                <h4 class="mb-1">{{ apartment.name }}</h4>
+                <p class="mb-0">
+                    <strong>{{ apartment.bedrooms }}</strong> chambre{{ 's' if apartment.bedrooms > 1 else '' }}
+                    · <strong>{{ apartment.rate }} €</strong> / nuit
+                </p>
+                {% if apartment.description %}
+                <p class="mt-2 mb-0 text-muted">{{ apartment.description }}</p>
+                {% endif %}
+            </div>
+            <form action="{{ url_for('manage_apartments') }}" method="post" onsubmit="return confirm('Supprimer cet appartement et ses photos ?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="action" value="delete" />
+                <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
+                <button class="btn btn-sm btn-danger" type="submit">Supprimer</button>
+            </form>
+        </div>
+
+        <form action="{{ url_for('manage_apartments') }}" method="post" class="row g-2 align-items-end mb-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="update" />
+            <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
+            <div class="col-md-3">
+                <label class="form-label">Nom</label>
+                <input class="form-control" type="text" name="name" value="{{ apartment.name }}" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Chambres</label>
+                <input class="form-control" type="number" name="bedrooms" min="1" step="1" value="{{ apartment.bedrooms }}" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Tarif par défaut (€ / nuit)</label>
+                <input class="form-control" type="number" name="rate" min="0" step="1" value="{{ apartment.rate }}" required />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Description</label>
+                <input class="form-control" type="text" name="description" value="{{ apartment.description or '' }}" />
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-warning w-100" type="submit">Enregistrer</button>
+            </div>
+        </form>
+
+        <h5 class="mb-2">Photos</h5>
+        {% if apartment.images %}
+        <div class="row g-3 mb-3">
+            {% for image in apartment.images %}
+            <div class="col-md-3 col-sm-6">
+                <div class="border rounded p-2 h-100">
+                    <img src="/static/{{ image.image_file }}" alt="{{ image.caption or apartment.name }}" class="img-fluid rounded" style="height: 140px; width: 100%; object-fit: cover;" />
+                    <p class="small mt-2 mb-2">{{ image.caption or "Sans légende" }}</p>
+                    <form action="{{ url_for('manage_apartments') }}" method="post">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <input type="hidden" name="action" value="delete_photo" />
+                        <input type="hidden" name="image_id" value="{{ image.id }}" />
+                        <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">Aucune photo pour le moment.</p>
+        {% endif %}
+
+        <form action="{{ url_for('manage_apartments') }}" method="post" enctype="multipart/form-data" class="row g-2 align-items-end">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="action" value="add_photos" />
+            <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
+            <div class="col-md-5">
+                <label class="form-label">Ajouter des photos</label>
+                <input class="form-control" type="file" name="photos" accept=".png,.jpg,.jpeg,.gif" multiple required />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Légende (optionnel)</label>
+                <input class="form-control" type="text" name="photo_caption" placeholder="Légende" />
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-warning w-100" type="submit">Ajouter les photos</button>
+            </div>
+        </form>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p class="text-muted">Aucun appartement enregistré pour le moment.</p>
+    {% endif %}
+</div>
+{% endblock %}

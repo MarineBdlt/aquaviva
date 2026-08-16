@@ -126,3 +126,71 @@ class GalleryImage(db.Model):
     caption = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
+
+class Apartment(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    name = db.Column(db.String(100), unique=True, nullable=False)
+    bedrooms = db.Column(db.Integer, nullable=False)
+    rate = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    images = db.relationship(
+        "ApartmentImage",
+        backref="apartment",
+        cascade="all, delete-orphan",
+        order_by="ApartmentImage.id",
+    )
+    reservations = db.relationship(
+        "ApartmentReservation",
+        backref="apartment",
+        cascade="all, delete-orphan",
+        order_by="ApartmentReservation.check_in",
+    )
+    monthly_rates = db.relationship(
+        "ApartmentMonthlyRate",
+        backref="apartment",
+        cascade="all, delete-orphan",
+        order_by="ApartmentMonthlyRate.year, ApartmentMonthlyRate.month",
+    )
+
+
+class ApartmentImage(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    apartment_id = db.Column(db.Integer, db.ForeignKey("apartment.id"), nullable=False)
+    image_file = db.Column(db.String(255), nullable=False)
+    caption = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+
+class ApartmentMonthlyRate(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    apartment_id = db.Column(db.Integer, db.ForeignKey("apartment.id"), nullable=False)
+    year = db.Column(db.Integer, nullable=False)
+    month = db.Column(db.Integer, nullable=False)
+    rate = db.Column(db.Integer, nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint("apartment_id", "year", "month", name="uq_apartment_month_rate"),
+    )
+
+
+class ApartmentReservation(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    apartment_id = db.Column(db.Integer, db.ForeignKey("apartment.id"), nullable=False)
+    check_in = db.Column(db.DateTime, nullable=False)
+    check_out = db.Column(db.DateTime, nullable=False)
+    guest_name = db.Column(db.String(100), nullable=False)
+    guest_email = db.Column(db.String(100), nullable=True)
+    guest_phone = db.Column(db.String(50), nullable=True)
+    notes = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+
+
+class GuestbookEntry(db.Model):
+    id = db.Column(db.Integer, primary_key=True, nullable=False)
+    author_name = db.Column(db.String(100), nullable=False)
+    author_city = db.Column(db.String(100), nullable=True)
+    message = db.Column(db.Text, nullable=False)
+    rating = db.Column(db.Integer, nullable=True)
+    is_approved = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+

@@ -1,12 +1,22 @@
 {% extends "layout.html" %}
+{% from "macros/pencil_icons.html" import section_title %}
 
 {% block title %}
-Prices
+{{ _('title.prices') }}
 {% endblock %}
 
+{% block meta_description %}{{ prices_content.body|striptags|truncate(155, True, '…') }}{% endblock %}
+{% block og_title %}{{ prices_content.title }} — Villa Aqua Viva, Calcatoggio{% endblock %}
+{% block canonical %}{{ url_for('prices', _external=True) }}{% endblock %}
+
 {% block main %}
-<div class="container">
-    <h1 class="text-warning mb-4">{{ prices_content.title }}</h1>
+<div class="container text-start">
+    {{ section_title('prices', prices_content.title, 'h1') }}
     <p class="lead text-dark">{{ prices_content.body }}</p>
+    <p class="mt-4 mb-0">
+        <a class="av-inline-link" href="{{ url_for('index') }}#appartements">{{ _('nav.apartments') }} →</a>
+        · <a class="av-inline-link" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }} →</a>
+        · <a class="av-inline-link" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }} →</a>
+    </p>
 </div>
 {% endblock %}

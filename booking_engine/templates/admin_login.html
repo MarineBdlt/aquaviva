@@ -1,20 +1,39 @@
 {% extends "layout.html" %}
 
 {% block title %}
-    Admin Login
+{{ _('title.login') }}
 {% endblock %}
 
 {% block main %}
 
-<form action="{{ url_for('admin_login') }}" method="post">
+<form action="{{ url_for('admin_login') }}" method="post" id="adminLoginForm">
     <div class="mb-3">
-        <input autocomplete="off" autofocus class="form-control mx-auto w-auto was-validated" required id="admin" name="admin" placeholder="Admin" type="text">
+        <input autocomplete="off" autofocus class="form-control mx-auto w-auto was-validated" required id="admin" name="admin" placeholder="{{ _('login.admin') }}" type="text">
     </div>
     <div class="mb-3">
-        <input class="form-control mx-auto w-auto was-validated" required id="passoword" name="password" placeholder="Password" autocomplete="off"  type="password">
+        <input class="form-control mx-auto w-auto was-validated" required id="passoword" name="password" placeholder="{{ _('login.password') }}" autocomplete="off"  type="password">
     </div>
     <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" /> 
-    <button class="btn btn-warning text-dark shadow bg-gradient" type="submit">Log In</button>
+    <button class="btn btn-warning text-dark shadow bg-gradient" type="submit">{{ _('login.submit') }}</button>
 </form>
+
+{% if is_localhost %}
+<button
+    type="button"
+    id="devFillAdmin"
+    class="btn btn-sm btn-dark text-warning shadow"
+    style="position: fixed; right: 1rem; top: 50%; transform: translateY(-50%); z-index: 1050; writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.05em;"
+    title="Remplir admin / AquaViva2026"
+>
+    Dev login
+</button>
+<script>
+document.getElementById('devFillAdmin').addEventListener('click', function () {
+    document.getElementById('admin').value = 'admin';
+    document.getElementById('passoword').value = 'AquaViva2026';
+    document.getElementById('admin').focus();
+});
+</script>
+{% endif %}
 
 {% endblock %}

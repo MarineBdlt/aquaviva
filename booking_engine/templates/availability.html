@@ -2,227 +2,260 @@
 {% set active_page = "availability" %}
 
 {% block title %}
-    Availability
+{{ _('title.availability') }}
 {% endblock %}
 
 {% block main %}
+<style>
+  .apt-cal td { height: 88px; width: 14.2%; vertical-align: top; }
+  .apt-cal .js-day-pick { cursor: pointer; }
+  .apt-cal .js-day-pick:hover { filter: brightness(0.95); }
+</style>
 
+<div class="container text-start">
+    <h2 class="text-warning mb-2">{{ _('title.availability') }}</h2>
+    <p class="mb-3">Calendrier et tarifs par appartement. Définissez un prix par défaut, puis un tarif pour chaque mois de l’année.</p>
 
-<!-- Add rooms for sale / booking -->
-
-
-<div class="text-headings-box container bg-secondary bg-gradient bg-opacity-75">
-  <h3 class="mb-2 text-warning">ADD AVAILABLE ROOMS FOR SELECTED DATES</h3>
-</div>
-<div class="admin-panel-box container bg-light border border-1 border-info shadow-lg">
-    <form class="form p-5 d-flex" action="{{ url_for('add_room') }}" method="post" id="availability_dates">
-
-        <div>
-          <select class="form-select d-flex mt-2" style="width: 500px; height: 30px;" name="rate_name" id="rate_name">
-            <option selected disabled>Select Rate plan</option>
-            {% for rate_type in rate_types %}
-            <option value="{{ rate_type.id }}">{{ rate_type.rate_name }}</option>
-            {% endfor %}
-          </select>
-          <p class="mt-2">Single gite mode: quantity fixed to 1.</p>
-        </div>
-        
-        
-        <div class="row d-flex justify-content-end">
-            <div class="dates_rate_plans d-flex shadow mb-4">
-                <input type="text" class="form-control was-validated"  id="start_date" name="start_date" placeholder="Start Date" autocomplete="off" >
-                <span class="input-group-addon p-1 bg-light bg-opacity-75 opacity-75" data-target="#datepicker1" data-toggle="datetimepicker">
-                    <span class="bi bi-calendar"></span>
-                </span>
-            </div>
-
-            <div class="dates_rate_plans d-flex shadow mb-4">
-                <input type="text" class="form-control was-validated"  id="end_date" name="end_date" placeholder="End Date" autocomplete="off" >
-                <span class="input-group-addon p-1 bg-light bg-opacity-75 opacity-75" data-target="#datepicker1" data-toggle="datetimepicker">
-                    <span class="bi bi-calendar"></span>
-                </span>
-            </div>  
-        </div>
-        <div>
-          <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" /> 
-          <input class="btn btn-primary bg-gradient mb-2 text-light mt-3 rounded shadow shadow-lg mt-5" type = "submit" name = "Test1" id="show_dates" value = "ADD ROOM">
-      </div>          
-    </form>
-</div>
-
-<!--Select Dates to check availability for all room types -->
-
-<div class="text-headings-box container bg-secondary bg-gradient bg-opacity-75 mt-5">
-  <h3 class="mb-2 text-warning">CHECK AVAILABILITY FOR SELECTED DATES</h3>
-</div>
-<div class="admin-panel-box container bg-light border border-1 border-info shadow-lg">
-    <form class="form p-1" action="{{ url_for('availability') }}" method="POST" id="availability_dates">
-        
-
-        <div class="mb-3 mt-3 mx-5"><strong>Single gite calendar</strong></div>
-
-        <div class="row d-flex justify-content-start">
-            <div class="dates_rate_plans d-flex shadow mb-4">
-                <input type="text" class="form-control was-validated"  id="from_date" name="from_date" placeholder="Start Date" autocomplete="off" >
-                <span class="input-group-addon p-1 bg-light bg-opacity-75 opacity-75" data-target="#datepicker1" data-toggle="datetimepicker">
-                    <span class="bi bi-calendar"></span>
-                </span>
-            </div>
-
-            <div class="dates_rate_plans d-flex shadow mb-4">
-                <input type="text" class="form-control was-validated"  id="to_date" name="to_date" placeholder="End Date" autocomplete="off" >
-                <span class="input-group-addon p-1 bg-light bg-opacity-75 opacity-75" data-target="#datepicker1" data-toggle="datetimepicker">
-                    <span class="bi bi-calendar"></span>
-                </span>
-            </div>
-
-            <div>
-                <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" /> 
-                <input class="btn btn-primary bg-gradient mb-3 text-light mt-3 rounded shadow shadow-lg" type = "submit" name = "Test1" id="show_dates" value = "SHOW">
-            </div> 
-        </div>            
-    </form>
-</div>
-
-
-<div class="text-headings-box container bg-secondary bg-gradient bg-opacity-75 mt-5">
-  <h3 class="mt-5 text-warning">AVAILABILITY CALENDAR</h3>
-</div>
-
-{% if room %}
-<div class="container-fluid d-flex justify-content-center">
-<div class="container-fluid mt-5  d-flex justify-content-center">
-<table class="border border-3 border-info bg-light bg-gradient shadow" border="1" width="50%" id="availability_table">
-    <thead>
-      <tr>
-        <th style="width:300px">Room</th>
-        <!-- Loop tru each date in dates loop tru listed_rooms and available_rooms and compare / check if is bookable -->
-        <th>Status</th>
-        {% for date in dates %}
-          <th>{{ date.strftime('%B')[0:3] }}
-            {{ date.strftime('%-d')}}    
-            {{date.strftime('%a')}}
-
-            {% for listed_room in listed_rooms %}
-              {% for available_room in listed_room.room_availability %}
-                {% if listed_room.room_id == room.id and listed_room.listed_date == date and available_room.listed_room_id == listed_room.id %}
-                  {% if available_room.is_it_available == 1 %}
-                    <br>
-                    <button type="button" style="width: 25px; height: 25px; color: white; background-color: green; border-radius: 20px;">a</button>
-
-                  {% elif available_room.is_it_available == 0 %}
-                    <br>
-                    <button type="button" style="width: 25px; height: 25px; color: white; background-color: red; border-radius: 20px;">n</button>
-                  {% endif %}
-                {% endif %}
-              {% endfor %}
-            {% endfor %}
-
-          </th>
-        {% endfor %}
-      </tr>
-    </thead>
-  
-    <tbody>
-      <tr>
-        <td rowspan="7">{{room.name}}</td>
-        <!-- room.name -->
-      </tr>
-      <tr class="border border-2">
-        <td><strong>Total</strong></td>
-        <!-- Loop each date in dates -->
-            <!--room.total_of_this_type -->
-        {% for date in dates %}
-          <td>{{ room.total_of_this_type }}</td>
-        {% endfor %}
-      </tr>
-      <tr>
-      <tr class="border border-2">
-        <td>Added</td>
-        <!-- Loop avail from availability -->
-              <!--avail.quantity_per_date -->
-        {% for listed_room in listed_rooms %}
-
-          {% if listed_room.room_id == room.id %}
-
-            {% if listed_room.quantity_per_date > 0 %}
-
-              <td>{{ listed_room.quantity_per_date }}</td>     
-
-            {% endif %}
-
-          {% endif %}
-        
-        {% endfor %}
-      </tr>
-      <tr class="border border-2">
-        <td>Available</td>
-        <!-- Loop avail from availability -->
-              <!--avail.left_to_sell -->
-        {% for date in dates %}
-
-          {% for listed_room in listed_rooms %}
-
-              {% if listed_room.room_id == room.id and listed_room.listed_date == date %}
-
-                {% for available_room in listed_room.room_availability %}
-                  
-                  {% if available_room.listed_room_id == listed_room.id %}
-
-                    <td>{{ available_room.left_to_sell }}</td>
-
-                  {% endif %}
-
-                {% endfor %}
-
-              {% endif %}
-          {% endfor %}
-
-        {% endfor %}
-      </tr>
-      <tr>
-        <td>Booked</td>
-        <!-- Loop avail from availability -->
-              <!--avail.booked_quantity -->
-        {% for date in dates %}
-
-        {% for listed_room in listed_rooms %}
-
-            {% if listed_room.room_id == room.id and listed_room.listed_date == date %}
-
-              {% for available_room in listed_room.room_availability %}
-                
-                {% if available_room.listed_room_id == listed_room.id %}
-
-                  <td>{{ available_room.booked_quantity }}</td>
-
-                {% endif %}
-
-              {% endfor %}
-
-            {% endif %}
-        {% endfor %}
-
-      {% endfor %}
-      </tr>
-      <tr>
-      </tr>
-    </tbody>
-  </table>
-  <form action="{{ url_for('stop_sale') }}" method="POST">
-    <div class="testing bg-light bg-gradient opacity-75 container-fluid d-block border border-1 border-danger shadow">
-      <h5 class="mt-4">STOP / ADD SALE</h5>
-      <input type="hidden" name="csrf_token" value = "{{ csrf_token() }}" /> 
-      <input type="text" class="form-control"  id="start_date" name="start_stop_date" placeholder="Start date" autocomplete="off" >
-      <input type="text" class="form-control mt-2"  id="end_date" name="end_stop_date" placeholder="End Date" autocomplete="off" >
-      <button class="btn btn-danger bg-gradient  text-light  rounded shadow shadow-lg mt-5 mb-3" type = "submit" name = "stop_sale" id="show_dates" value = "STOP">STOP SALE</button>
-      <input type="text" value="{{room.id}}" style="display: none;" id="stop_sale_room_id" name="stop_sale_room_id">
-      <button class="btn btn-success bg-gradient text-light  rounded shadow shadow-lg mt-3 mb-5" type = "submit" name = "add_sale" id="show_dates" value = "ADD">ADD SALE</button>
+    <div class="d-flex justify-content-between align-items-center bg-light border border-info shadow p-2 mb-4">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('availability', month=prev_month) }}">← Mois précédent</a>
+        <strong>{{ month_label }}</strong>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('availability', month=next_month) }}">Mois suivant →</a>
     </div>
-    
-  </form>
-</div>
-</div>
-{% endif %}
 
+    {% if not calendars %}
+    <p class="text-muted">Aucun appartement. Créez-en d’abord dans <a href="{{ url_for('manage_apartments') }}">Appartements</a>.</p>
+    {% endif %}
+
+    {% for cal in calendars %}
+    {% set apartment = cal.apartment %}
+    <div class="card p-3 mb-4" id="apt-{{ apartment.id }}">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+            <div>
+                <h3 class="h4 mb-1">{{ apartment.name }}</h3>
+                <p class="mb-0 text-muted">
+                    {{ apartment.bedrooms }} chambre{{ 's' if apartment.bedrooms > 1 else '' }}
+                    · <strong>{{ cal.effective_rate }} €</strong> / nuit
+                    {% if cal.is_monthly_override %}
+                    <span class="badge bg-warning text-dark">Tarif {{ month_label }}</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Tarif par défaut</span>
+                    {% endif %}
+                </p>
+            </div>
+            <div class="small">
+                <span class="badge bg-success bg-opacity-50 text-dark">Libre</span>
+                <span class="badge bg-danger bg-opacity-50 text-dark">Réservé</span>
+                <span class="badge bg-primary">Entrée</span>
+                <span class="badge bg-info text-dark">Sortie</span>
+            </div>
+        </div>
+
+        <div class="border rounded p-3 mb-3 bg-light">
+            <h5 class="mb-3">Tarifs</h5>
+            <form action="{{ url_for('apartment_rates') }}" method="post" class="row g-2 align-items-end mb-3">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="action" value="update_default_rate" />
+                <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
+                <input type="hidden" name="return_month" value="{{ current_month_query }}" />
+                <input type="hidden" name="rates_year" value="{{ rates_year }}" />
+                <div class="col-md-4">
+                    <label class="form-label">Tarif par défaut (€ / nuit)</label>
+                    <input class="form-control" type="number" name="default_rate" min="0" step="1" value="{{ apartment.rate }}" required />
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-secondary" type="submit">Enregistrer le défaut</button>
+                </div>
+            </form>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <strong>Tarifs mensuels {{ rates_year }}</strong>
+                <div>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('availability', month=current_month_query, year=prev_rates_year) }}#apt-{{ apartment.id }}">← {{ prev_rates_year }}</a>
+                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('availability', month=current_month_query, year=next_rates_year) }}#apt-{{ apartment.id }}">{{ next_rates_year }} →</a>
+                </div>
+            </div>
+            <p class="small text-muted mb-2">Laissez un mois vide pour utiliser le tarif par défaut ({{ apartment.rate }} €).</p>
+            <form action="{{ url_for('apartment_rates') }}" method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <input type="hidden" name="action" value="update_year_rates" />
+                <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
+                <input type="hidden" name="return_month" value="{{ current_month_query }}" />
+                <input type="hidden" name="year" value="{{ rates_year }}" />
+                <input type="hidden" name="rates_year" value="{{ rates_year }}" />
+                <div class="row g-2">
+                    {% for yr in cal.year_rates %}
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <label class="form-label mb-1">
+                            {{ yr.name }}
+                            {% if yr.is_override %}
+                            <span class="badge bg-warning text-dark">spécifique</span>
+                            {% else %}
+                            <span class="badge bg-secondary">défaut</span>
+                            {% endif %}
+                        </label>
+                        <input
+                            class="form-control"
+                            type="number"
+                            name="rate_{{ yr.month }}"
+                            min="0"
+                            step="1"
+                            placeholder="{{ apartment.rate }}"
+                            value="{{ yr.override_rate }}"
+                        />
+                    </div>
+                    {% endfor %}
+                </div>
+                <button class="btn btn-warning mt-3" type="submit">Enregistrer les 12 mois</button>
+            </form>
+        </div>
+
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered text-center align-middle mb-0 apt-cal">
+                <thead>
+                    <tr>
+                        <th>Lun</th><th>Mar</th><th>Mer</th><th>Jeu</th><th>Ven</th><th>Sam</th><th>Dim</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for week in cal.month_weeks %}
+                    <tr>
+                        {% for date in week %}
+                        {% set in_month = (date.month == current_month) %}
+                        {% set is_occupied = (date in cal.occupied_dates) %}
+                        {% set is_checkin = (date in cal.checkin_map) %}
+                        {% set is_checkout = (date in cal.checkout_map) %}
+                        {% set occ_res = cal.occupied_map.get(date) %}
+                        <td
+                            class="
+                                {% if in_month and not is_occupied %}js-day-pick bg-success bg-opacity-25{% endif %}
+                                {% if not in_month %}bg-light text-muted{% endif %}
+                                {% if date == today %}table-warning{% endif %}
+                                {% if in_month and is_occupied %}bg-danger bg-opacity-50{% endif %}
+                            "
+                            {% if in_month and not is_occupied %}
+                            data-apartment="{{ apartment.id }}"
+                            data-date="{{ date.strftime('%d-%m-%Y') }}"
+                            title="Cliquer pour remplir l'entrée"
+                            {% elif in_month and occ_res %}
+                            title="{{ occ_res.guest_name }} — {{ occ_res.check_in.strftime('%d-%m-%Y') }} → {{ occ_res.check_out.strftime('%d-%m-%Y') }}"
+                            {% endif %}
+                        >
+                            <div class="d-flex justify-content-between">
+                                <strong>{{ date.day }}</strong>
+                                {% if date == today %}<span class="badge bg-dark">Aujourd'hui</span>{% endif %}
+                            </div>
+                            {% if in_month and is_checkin %}
+                            <span class="badge bg-primary mt-1">Entrée</span>
+                            {% endif %}
+                            {% if in_month and is_checkout %}
+                            <span class="badge bg-info text-dark mt-1">Sortie</span>
+                            {% endif %}
+                            {% if in_month and occ_res %}
+                            <div class="mt-1 small text-dark text-truncate">{{ occ_res.guest_name }}</div>
+                            {% endif %}
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <h5 class="mb-2">Ajouter une réservation</h5>
+        <form action="{{ url_for('apartment_reservation') }}" method="post" class="row g-2 align-items-end mb-3 apt-res-form" data-apartment="{{ apartment.id }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
+            <input type="hidden" name="return_month" value="{{ current_month_query }}" />
+            <div class="col-md-2">
+                <label class="form-label">Entrée</label>
+                <input class="form-control apt-check-in" type="text" name="check_in" placeholder="jj-mm-aaaa" required autocomplete="off" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Sortie</label>
+                <input class="form-control apt-check-out" type="text" name="check_out" placeholder="jj-mm-aaaa" required autocomplete="off" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Client</label>
+                <input class="form-control" type="text" name="guest_name" placeholder="Nom" required />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Email</label>
+                <input class="form-control" type="email" name="guest_email" placeholder="Email" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Téléphone</label>
+                <input class="form-control" type="text" name="guest_phone" placeholder="Téléphone" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Notes</label>
+                <input class="form-control" type="text" name="notes" placeholder="Optionnel" />
+            </div>
+            <div class="col-12">
+                <button class="btn btn-warning" type="submit">Enregistrer la réservation</button>
+            </div>
+        </form>
+
+        {% if cal.reservations %}
+        <h5 class="mb-2">Réservations</h5>
+        <div class="table-responsive">
+            <table class="table table-sm table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Entrée</th>
+                        <th>Sortie</th>
+                        <th>Client</th>
+                        <th>Contact</th>
+                        <th>Notes</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for res in cal.reservations %}
+                    <tr>
+                        <td>{{ res.check_in.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ res.check_out.strftime('%d-%m-%Y') }}</td>
+                        <td>{{ res.guest_name }}</td>
+                        <td>
+                            {% if res.guest_email %}{{ res.guest_email }}{% endif %}
+                            {% if res.guest_phone %}<br>{{ res.guest_phone }}{% endif %}
+                        </td>
+                        <td>{{ res.notes or "" }}</td>
+                        <td>
+                            <form action="{{ url_for('delete_apartment_reservation') }}" method="post" onsubmit="return confirm('Supprimer cette réservation ?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="reservation_id" value="{{ res.id }}" />
+                                <input type="hidden" name="return_month" value="{{ current_month_query }}" />
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.querySelectorAll('.js-day-pick').forEach((cell) => {
+  cell.addEventListener('click', () => {
+    const aptId = cell.dataset.apartment;
+    const form = document.querySelector(`.apt-res-form[data-apartment="${aptId}"]`);
+    if (!form) return;
+    const input = form.querySelector('.apt-check-in');
+    input.value = cell.dataset.date;
+    input.focus();
+  });
+});
+
+$(function () {
+  $('.apt-check-in, .apt-check-out').datepicker({
+    format: 'dd-mm-yyyy',
+    todayHighlight: true,
+    autoclose: true
+  });
+});
+</script>
 {% endblock %}

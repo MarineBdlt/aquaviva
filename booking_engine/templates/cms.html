@@ -4,159 +4,360 @@
 {% block title %}
 CMS
 {% endblock %}
+{% block meta_robots %}noindex,nofollow{% endblock %}
 
 {% block main %}
-<div class="container text-start">
-    <h2 class="text-warning mb-3">CMS</h2>
+<div class="container-fluid text-start px-3 px-lg-4">
+    <div class="cms-toolbar d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+        <div>
+            <h2 class="text-warning mb-1">CMS — Page d’accueil</h2>
+            <p class="mb-0 small text-muted">
+                {{ _('cms.lang_hint') }}
+                <strong>{{ lang_meta[current_lang].flag }} {{ lang_meta[current_lang].label }}</strong>
+            </p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-secondary btn-sm" id="cmsRefreshPreview">Rafraîchir l’aperçu</button>
+            <a class="btn btn-warning btn-sm" href="{{ preview_url }}" target="_blank" rel="noopener">Ouvrir l’aperçu ↗</a>
+            <a class="btn btn-outline-dark btn-sm" href="{{ url_for('index') }}" target="_blank" rel="noopener">Site public ↗</a>
+        </div>
+    </div>
 
-    <div class="card p-3 mb-4">
-        <h4>HOME & GALLERY</h4>
-        <form action="{{ url_for('cms') }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="update_content" />
-            <div class="mb-3">
-                <h5>Home text</h5>
-                <input class="form-control mb-2" type="text" name="home_title" value="{{ contents['home'].title }}" placeholder="Home title" />
-                <textarea class="form-control" name="home_body" rows="3" placeholder="Home text">{{ contents['home'].body }}</textarea>
-            </div>
-            <div class="mb-3 border-top pt-3">
-                <h5>Gallery text</h5>
-                <input class="form-control mb-2" type="text" name="gallery_title" value="{{ contents['gallery'].title }}" placeholder="Gallery title" />
-                <textarea class="form-control" name="gallery_body" rows="3" placeholder="Gallery text">{{ contents['gallery'].body }}</textarea>
-            </div>
-            <button class="btn btn-warning" type="submit">Save Home & Gallery Texts</button>
-        </form>
+    <nav class="cms-jump mb-3" aria-label="Sections CMS">
+        <a href="#section-intro">Intro</a>
+        <a href="#section-localisation">Localisation</a>
+        <a href="#section-about">Qui sommes-nous</a>
+        <a href="#section-spots">Bonnes adresses</a>
+        <a href="#section-prices">Tarifs</a>
+        <a href="#section-guestbook">Livre d’or</a>
+        <a href="#section-global">Réglages</a>
+    </nav>
 
-        <hr>
-        <h5>Home background image</h5>
-        <p class="mb-2">Displayed on <strong>Home page</strong>. If empty, global banner is used.</p>
-        <p class="mb-2">Current home background: <code>/static/{{ home_bg_path if home_bg_path else banner_path }}</code></p>
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="upload_home_background" />
-            <input class="form-control mb-2" type="file" name="home_bg_image" accept=".png,.jpg,.jpeg,.gif" required />
-            <button class="btn btn-warning" type="submit">Upload Home Background</button>
-        </form>
+    <div class="row g-3 cms-layout">
+        <div class="col-xl-5">
+            <div class="accordion cms-accordion" id="cmsAccordion">
 
-        <form action="{{ url_for('cms') }}" method="post" class="mb-3">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="update_home_slider" />
-            <h5 class="mb-2">Home Slideshow Order</h5>
-            <p class="small text-muted mb-2">All gallery photos are shown. Checked photos appear first, in the order below.</p>
-            <div class="row g-2" id="sliderSelectionBox">
-                {% for image in gallery_images %}
-                <div class="col-md-4">
-                    <label class="form-check p-2 border rounded d-block">
-                        <input class="form-check-input mt-0" type="checkbox" name="slider_image_ids" value="{{ image.id }}" {% if image.id in current_slider_ids %}checked{% endif %}>
-                        <span class="ms-1">Start diapo</span>
-                        <img src="/static/{{ image.image_file }}" class="img-fluid rounded mt-2" alt="{{ image.caption or image.image_file }}" style="height: 90px; width: 100%; object-fit: cover;">
-                        <small class="d-block mt-1">#{{ image.id }} {{ image.caption or image.image_file }}</small>
-                    </label>
-                </div>
-                {% endfor %}
-            </div>
-            <button class="btn btn-warning mt-2" type="submit">Save Home Slideshow</button>
-        </form>
+                <div class="accordion-item" id="section-intro">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#accIntro">
+                            1 · Intro &amp; carrousel
+                        </button>
+                    </h2>
+                    <div id="accIntro" class="accordion-collapse collapse show" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('cms') }}" method="post" class="mb-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_content" />
+                                <label class="form-label fw-semibold">Titre</label>
+                                <input class="form-control mb-2" type="text" name="home_title" value="{{ contents['home'].title if contents['home'] else '' }}" />
+                                <label class="form-label fw-semibold">Texte sous le carrousel</label>
+                                <textarea class="form-control mb-2" name="home_body" rows="3">{{ contents['home'].body if contents['home'] else '' }}</textarea>
+                                <button class="btn btn-warning" type="submit">Enregistrer l’intro</button>
+                            </form>
 
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3" id="galleryUploadForm">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="upload_gallery" />
-            <p class="mb-1"><strong>Add photos to gallery</strong></p>
-            <input class="form-control mb-2" type="file" id="galleryFileInput" name="gallery_image" accept=".png,.jpg,.jpeg,.gif" multiple required />
-            <div id="galleryFileList" class="small text-muted mb-2"></div>
-            <input class="form-control mb-2" type="text" name="caption" placeholder="Caption for selected images (optional)" />
-            <button class="btn btn-warning" type="submit">Add Gallery Image(s)</button>
-        </form>
+                            <hr>
+                            <h6>Photos du carrousel</h6>
+                            <p class="small text-muted">Cochez les images à afficher. Aucune case = toutes les photos.</p>
+                            <form action="{{ url_for('cms') }}" method="post" class="mb-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_home_slider" />
+                                <div class="row g-2">
+                                    {% for image in gallery_images %}
+                                    <div class="col-6">
+                                        <label class="form-check p-2 border rounded d-block h-100">
+                                            <input class="form-check-input" type="checkbox" name="slider_image_ids" value="{{ image.id }}" {% if image.id in current_slider_ids %}checked{% endif %}>
+                                            <img src="/static/{{ image.image_file }}" class="img-fluid rounded mt-1" alt="" style="height: 70px; width: 100%; object-fit: cover;">
+                                            <small class="d-block mt-1 text-truncate">#{{ image.id }}</small>
+                                        </label>
+                                    </div>
+                                    {% else %}
+                                    <p class="small text-muted">Aucune photo — ajoutez-en ci-dessous.</p>
+                                    {% endfor %}
+                                </div>
+                                <button class="btn btn-warning mt-2" type="submit">Enregistrer le carrousel</button>
+                            </form>
 
-        {% if gallery_images %}
-        <div class="row g-3">
-            {% for image in gallery_images %}
-            <div class="col-md-4">
-                <div class="card">
-                    <img src="/static/{{ image.image_file }}" class="card-img-top" alt="{{ image.caption or 'gallery image' }}" style="height: 120px; object-fit: cover;">
-                    <div class="card-body">
-                        <p class="card-text">{{ image.caption or "No caption" }}</p>
-                        <form action="{{ url_for('cms') }}" method="post">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                            <input type="hidden" name="action" value="delete_gallery" />
-                            <input type="hidden" name="image_id" value="{{ image.id }}" />
-                            <button class="btn btn-sm btn-danger" type="submit">Delete</button>
-                        </form>
+                            <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" id="galleryUploadForm">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="upload_gallery" />
+                                <label class="form-label fw-semibold">Ajouter des photos</label>
+                                <input class="form-control mb-2" type="file" id="galleryFileInput" name="gallery_image" accept=".png,.jpg,.jpeg,.gif" multiple required />
+                                <div id="galleryFileList" class="small text-muted mb-2"></div>
+                                <input class="form-control mb-2" type="text" name="caption" placeholder="Légende (optionnel)" />
+                                <button class="btn btn-outline-secondary btn-sm" type="submit">Ajouter</button>
+                            </form>
+
+                            {% if gallery_images %}
+                            <div class="row g-2 mt-3">
+                                {% for image in gallery_images %}
+                                <div class="col-6">
+                                    <div class="border rounded p-1">
+                                        <img src="/static/{{ image.image_file }}" class="img-fluid rounded" alt="" style="height: 64px; width: 100%; object-fit: cover;">
+                                        <form action="{{ url_for('cms') }}" method="post" class="mt-1">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                            <input type="hidden" name="action" value="delete_gallery" />
+                                            <input type="hidden" name="image_id" value="{{ image.id }}" />
+                                            <button class="btn btn-sm btn-outline-danger w-100" type="submit">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
+
+                <div class="accordion-item" id="section-localisation">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accLoc">
+                            2 · Localisation &amp; à proximité
+                        </button>
+                    </h2>
+                    <div id="accLoc" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('cms') }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_location_section" />
+                                <label class="form-label fw-semibold">Titre de section</label>
+                                <input class="form-control mb-2" type="text" name="location_title" value="{{ contents['location'].title if contents['location'] else 'Localisation' }}" />
+                                <label class="form-label">Lieu</label>
+                                <input class="form-control mb-2" type="text" name="location_place" value="{{ location_place }}" />
+                                <label class="form-label">Région</label>
+                                <input class="form-control mb-2" type="text" name="location_region" value="{{ location_region }}" />
+                                <label class="form-label">Texte de présentation</label>
+                                <textarea class="form-control mb-3" name="location_summary" rows="3">{{ location_summary }}</textarea>
+
+                                <label class="form-label fw-semibold">Titre « À proximité »</label>
+                                <input class="form-control mb-2" type="text" name="nearby_title" value="{{ nearby_title }}" />
+                                <label class="form-label">Liste (une ligne = <code>icone|nom|détail</code>)</label>
+                                <textarea class="form-control mb-2 font-monospace small" name="nearby_list_text" rows="10">{{ nearby_list_text }}</textarea>
+                                <p class="small text-muted">Icônes : beach, tower, paraglide, watersport, dive, boat, town</p>
+                                <button class="btn btn-warning" type="submit">Enregistrer la localisation</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" id="section-about">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accAbout">
+                            3 · Qui sommes-nous
+                        </button>
+                    </h2>
+                    <div id="accAbout" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('cms') }}" method="post" class="mb-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_content" />
+                                <input class="form-control mb-2" type="text" name="about_title" value="{{ contents['about'].title if contents['about'] else '' }}" placeholder="Titre" />
+                                <textarea class="form-control mb-2" name="about_body" rows="8" placeholder="Texte (paragraphes séparés par une ligne vide)">{{ contents['about'].body if contents['about'] else '' }}</textarea>
+                                <button class="btn btn-warning" type="submit">Enregistrer Qui sommes-nous</button>
+                            </form>
+                            <p class="small mb-1">Image carte postale :</p>
+                            {% if about_image_path %}
+                            <img src="/static/{{ about_image_path }}" alt="" class="img-fluid rounded border mb-2" style="max-height: 140px;">
+                            {% endif %}
+                            <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="upload_about_image" />
+                                <input class="form-control mb-2" type="file" name="about_image" accept=".png,.jpg,.jpeg,.gif" required />
+                                <button class="btn btn-outline-secondary btn-sm" type="submit">Changer l’image</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" id="section-spots">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accSpots">
+                            4 · Bonnes adresses
+                        </button>
+                    </h2>
+                    <div id="accSpots" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('cms') }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_spots_section" />
+                                <label class="form-label fw-semibold">Titre</label>
+                                <input class="form-control mb-2" type="text" name="spots_title" value="{{ contents['spots'].title if contents['spots'] else '' }}" />
+                                <label class="form-label">Introduction</label>
+                                <textarea class="form-control mb-2" name="spots_intro" rows="2">{{ contents['spots'].body if contents['spots'] else '' }}</textarea>
+                                <label class="form-label">Adresses (une ligne = <code>icone|nom|type|note|détail</code>)</label>
+                                <textarea class="form-control mb-2 font-monospace small" name="spots_list_text" rows="10">{{ spots_list_text }}</textarea>
+                                <p class="small text-muted">Icônes : pizza, auberge, foodtruck, seaside</p>
+                                <button class="btn btn-warning" type="submit">Enregistrer les adresses</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" id="section-prices">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accPrices">
+                            5 · Page Tarifs
+                        </button>
+                    </h2>
+                    <div id="accPrices" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('cms') }}" method="post">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_content" />
+                                <input class="form-control mb-2" type="text" name="prices_title" value="{{ contents['prices'].title if contents['prices'] else '' }}" />
+                                <textarea class="form-control mb-2" name="prices_body" rows="3">{{ contents['prices'].body if contents['prices'] else '' }}</textarea>
+                                <button class="btn btn-warning" type="submit">Enregistrer les tarifs</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" id="section-guestbook">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accGuestbook">
+                            6 · Livre d’or
+                        </button>
+                    </h2>
+                    <div id="accGuestbook" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <p class="small text-muted">Les messages publics ne s’affichent qu’après approbation.</p>
+                            <h3 class="h6 text-warning">En attente ({{ guestbook_pending|length }})</h3>
+                            {% if guestbook_pending %}
+                            <ul class="list-unstyled mb-4">
+                                {% for entry in guestbook_pending %}
+                                <li class="border rounded p-2 mb-2 bg-light">
+                                    <strong>{{ entry.author_name }}</strong>
+                                    {% if entry.author_city %}<span class="text-muted"> · {{ entry.author_city }}</span>{% endif %}
+                                    {% if entry.rating %}<span class="ms-1">{{ '★' * entry.rating }}</span>{% endif %}
+                                    <p class="mb-2 small mt-1">{{ entry.message }}</p>
+                                    <div class="d-flex gap-2">
+                                        <form action="{{ url_for('cms') }}" method="post" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                            <input type="hidden" name="action" value="approve_guestbook" />
+                                            <input type="hidden" name="entry_id" value="{{ entry.id }}" />
+                                            <button class="btn btn-success btn-sm" type="submit">Approuver</button>
+                                        </form>
+                                        <form action="{{ url_for('cms') }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer ce message ?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                            <input type="hidden" name="action" value="delete_guestbook" />
+                                            <input type="hidden" name="entry_id" value="{{ entry.id }}" />
+                                            <button class="btn btn-outline-danger btn-sm" type="submit">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="small text-muted mb-4">Aucun message en attente.</p>
+                            {% endif %}
+
+                            <h3 class="h6 text-warning">Publiés ({{ guestbook_approved|length }})</h3>
+                            {% if guestbook_approved %}
+                            <ul class="list-unstyled mb-0">
+                                {% for entry in guestbook_approved %}
+                                <li class="border rounded p-2 mb-2">
+                                    <strong>{{ entry.author_name }}</strong>
+                                    {% if entry.author_city %}<span class="text-muted"> · {{ entry.author_city }}</span>{% endif %}
+                                    <p class="mb-2 small mt-1">{{ entry.message }}</p>
+                                    <form action="{{ url_for('cms') }}" method="post" onsubmit="return confirm('Supprimer ce message publié ?');">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                        <input type="hidden" name="action" value="delete_guestbook" />
+                                        <input type="hidden" name="entry_id" value="{{ entry.id }}" />
+                                        <button class="btn btn-outline-danger btn-sm" type="submit">Supprimer</button>
+                                    </form>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="small text-muted mb-0">Aucun message publié pour l’instant.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item" id="section-global">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accGlobal">
+                            7 · Réglages globaux
+                        </button>
+                    </h2>
+                    <div id="accGlobal" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <form action="{{ url_for('cms') }}" method="post" class="mb-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_contact" />
+                                <label class="form-label">Téléphone / WhatsApp</label>
+                                <input class="form-control mb-2" type="text" name="site_phone" value="{{ site_phone }}" />
+                                <label class="form-label">E-mail</label>
+                                <input class="form-control mb-2" type="email" name="site_email" value="{{ site_email }}" />
+                                <button class="btn btn-warning" type="submit">Enregistrer le contact</button>
+                            </form>
+                            <p class="small mb-1">Logo actuel</p>
+                            <img src="/static/{{ site_logo_path }}" alt="" class="mb-2" style="height: 64px;">
+                            <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="upload_logo" />
+                                <input class="form-control mb-2" type="file" name="site_logo" accept=".png,.jpg,.jpeg,.gif" required />
+                                <button class="btn btn-outline-secondary btn-sm" type="submit">Changer le logo</button>
+                            </form>
+                            <p class="small mb-1">Bannière (autres pages)</p>
+                            <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="upload_banner" />
+                                <input class="form-control mb-2" type="file" name="banner_image" accept=".png,.jpg,.jpeg,.gif" required />
+                                <button class="btn btn-outline-secondary btn-sm" type="submit">Changer la bannière</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-            {% endfor %}
         </div>
-        {% endif %}
-    </div>
 
-    <div class="card p-3 mb-4">
-        <h4>ABOUT</h4>
-        <form action="{{ url_for('cms') }}" method="post" class="mb-3">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="update_content" />
-            <input class="form-control mb-2" type="text" name="about_title" value="{{ contents['about'].title }}" placeholder="About title" />
-            <textarea class="form-control mb-2" name="about_body" rows="3" placeholder="About text">{{ contents['about'].body }}</textarea>
-            <button class="btn btn-warning" type="submit">Save About Text</button>
-        </form>
-        <p class="mb-2">This image is displayed on the <strong>About page</strong>.</p>
-        <p class="mb-2">Current about image: <code>/static/{{ about_image_path if about_image_path else 'none' }}</code></p>
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="upload_about_image" />
-            <input class="form-control mb-2" type="file" name="about_image" accept=".png,.jpg,.jpeg,.gif" required />
-            <button class="btn btn-warning" type="submit">Upload About Image</button>
-        </form>
-    </div>
-
-    <div class="card p-3 mb-4">
-        <h4>PRICES</h4>
-        <form action="{{ url_for('cms') }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="update_content" />
-            <input class="form-control mb-2" type="text" name="prices_title" value="{{ contents['prices'].title }}" placeholder="Prices title" />
-            <textarea class="form-control mb-2" name="prices_body" rows="3" placeholder="Prices text">{{ contents['prices'].body }}</textarea>
-            <button class="btn btn-warning" type="submit">Save Prices Text</button>
-        </form>
-    </div>
-
-    <div class="card p-3 mb-4">
-        <h4>GLOBAL SETTINGS</h4>
-        <form action="{{ url_for('cms') }}" method="post" class="mb-3">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="update_contact" />
-            <input class="form-control mb-2" type="text" name="site_phone" value="{{ site_phone }}" placeholder="Phone number" />
-            <input class="form-control mb-2" type="email" name="site_email" value="{{ site_email }}" placeholder="Contact email" />
-            <button class="btn btn-warning" type="submit">Save Contact</button>
-        </form>
-        <p class="mb-2">Current logo: <code>/static/{{ site_logo_path }}</code></p>
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data" class="mb-3">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="upload_logo" />
-            <input class="form-control mb-2" type="file" name="site_logo" accept=".png,.jpg,.jpeg,.gif" required />
-            <button class="btn btn-warning" type="submit">Upload Logo</button>
-        </form>
-        <p class="mb-2">Current banner: <code>/static/{{ banner_path }}</code></p>
-        <form action="{{ url_for('cms') }}" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            <input type="hidden" name="action" value="upload_banner" />
-            <input class="form-control mb-2" type="file" name="banner_image" accept=".png,.jpg,.jpeg,.gif" required />
-            <button class="btn btn-warning" type="submit">Upload Banner</button>
-        </form>
+        <div class="col-xl-7">
+            <div class="cms-preview-panel">
+                <div class="cms-preview-bar d-flex justify-content-between align-items-center">
+                    <span class="small fw-semibold">Prévisualisation de l’accueil</span>
+                    <span class="small text-muted">{{ lang_meta[current_lang].flag }} {{ lang_meta[current_lang].label }}</span>
+                </div>
+                <iframe
+                    id="cmsPreviewFrame"
+                    class="cms-preview-frame"
+                    title="Prévisualisation accueil"
+                    src="{{ preview_url }}"
+                ></iframe>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
   const fileInput = document.getElementById('galleryFileInput');
   const fileList = document.getElementById('galleryFileList');
-
   if (fileInput && fileList) {
-    const syncFileList = () => {
+    fileInput.addEventListener('change', () => {
       const names = Array.from(fileInput.files || []).map(f => f.name);
-      fileList.textContent = names.length ? names.join(', ') : 'No file selected';
-    };
+      fileList.textContent = names.length ? names.join(', ') : '';
+    });
+  }
 
-    fileInput.addEventListener('change', syncFileList);
+  const frame = document.getElementById('cmsPreviewFrame');
+  const refreshBtn = document.getElementById('cmsRefreshPreview');
+  if (refreshBtn && frame) {
+    refreshBtn.addEventListener('click', () => {
+      frame.src = frame.src.split('?')[0] + '?t=' + Date.now();
+    });
+  }
+
+  // Open accordion from URL hash after save
+  if (location.hash) {
+    const target = document.querySelector(location.hash + ' .accordion-button');
+    if (target) {
+      const collapseId = target.getAttribute('data-bs-target');
+      const pane = document.querySelector(collapseId);
+      if (pane && window.bootstrap) {
+        new bootstrap.Collapse(pane, { show: true });
+      }
+    }
   }
 </script>
 {% endblock %}

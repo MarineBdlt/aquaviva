@@ -1,181 +1,177 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ current_lang }}">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}{{ _('meta.default_description') }}{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}index,follow{% endblock %}">
+    <meta name="theme-color" content="#1e4f5a">
+    <link rel="canonical" href="{% block canonical %}{{ request.url }}{% endblock %}">
+    {% for code in supported_langs %}
+    <link rel="alternate" hreflang="{{ code }}" href="{{ request.base_url }}?lang={{ code }}">
+    {% endfor %}
+    <link rel="alternate" hreflang="x-default" href="{{ url_for('index', _external=True) }}?lang=fr">
 
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="{{ {'fr':'fr_FR','en':'en_GB','pt':'pt_BR','it':'it_IT'}.get(current_lang, 'fr_FR') }}">
+    <meta property="og:site_name" content="Villa Aqua Viva">
+    <meta property="og:title" content="{% block og_title %}{{ _('meta.default_og_title') }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:image" content="{{ url_for('static', filename=site_logo_path, _external=True) }}">
 
-    <!-- BootStrap -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ self.og_title() }}">
+    <meta name="twitter:description" content="{{ self.meta_description() }}">
+
     <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" rel="stylesheet">
     <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"></script>
-
-    <!-- Bootstrap Icons CDN-->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
-    
 
-    <!-- For the button -->
-    <script
-        src="https://code.jquery.com/jquery-3.5.1.min.js" 
-        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" 
-        crossorigin="anonymous"
-    ></script>
-        
-    <!-- CSS -->
-    <link href="/static/styles.css" rel="stylesheet">
-    
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
 
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="/static/styles.css?v=footer4" rel="stylesheet">
+
     <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-
-    <!-- Include Date Range Picker -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js" integrity="sha512-LsnSViqQyaXpD4mBBdRYeP6sRwJiJveh2ZIbW41EBrNmKxgr/LFZIiWT6yr+nycvhvauz8c2nYMhrP80YhG7Cw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/css/bootstrap-datepicker.min.css" integrity="sha512-34s5cpvaNG3BknEWSuOncX28vz97bRI59UnVtEEpFX536A7BtZSJHsDyFoCl8S7Dt2TPzcrCEoHBGeM4SUBDBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-
-    <!-- Font awesome / fa-icons -->
     <script defer src="https://use.fontawesome.com/releases/v5.15.4/js/all.js" integrity="sha384-rOA1PnstxnOBLzCLMcre8ybwbTmemjzdNlILg8O7z1lUkLXozs4DHonlDtnE7fpc" crossorigin="anonymous"></script>
-    <link rel="stylesheet" 
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
-    integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" 
-    crossorigin="anonymous" 
-    referrerpolicy="no-referrer" />
-
-
-     <!-- Data tables -->
-
-     <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
- 
-    
-    <!-- For JavaScript -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <script src="/static/hotel.js" type="text/javascript" defer></script>
 
-    
-
-    <title>Aqua Viva: {% block title %}{% endblock %}</title>
-
+    <title>{% block title %}{{ _('title.home') }}{% endblock %} | Villa Aqua Viva — Calcatoggio</title>
+    {% block structured_data %}{% endblock %}
 </head>
 
+<body class="av-body">
 
-<body class="bg-info bg-gradient bg-opacity-10">
+{% from "macros/pencil_icons.html" import pencil_icon %}
 
 <div class="wrapper">
-    
-    <div class="navbar bg-info bg-opacity-50  p-0 ">
-        <div class="container d-flex flex-row justify-content-center">
-            <i class="fa fa-phone mx-3"></i>
-            <a class=" text-dark" href="tel:{{ site_phone }}" style="text-decoration: none;">{{ site_phone }}</a>
-
-            <i class="fa fa-envelope mx-3"></i>
-            <a class=" text-dark " href="mailto:{{ site_email }}" style="text-decoration: none;">{{ site_email }}</a>
+    <div class="av-topbar navbar p-0">
+        <div class="container d-flex flex-row justify-content-between align-items-center py-2">
+            <div class="d-flex flex-row align-items-center flex-wrap gap-3">
+                <a class="av-topbar-link topbar-pencil" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer" title="{{ _('footer.whatsapp') }}">
+                    {{ pencil_icon('whatsapp', 22) }}
+                    <span>{{ site_phone }}</span>
+                </a>
+                <a class="av-topbar-link topbar-pencil" href="mailto:{{ site_email }}">
+                    {{ pencil_icon('mail', 22) }}
+                    <span>{{ site_email }}</span>
+                </a>
+            </div>
+            <div class="lang-switcher d-flex align-items-center gap-1">
+                {% for code in supported_langs %}
+                <a href="{{ url_for('set_language', lang=code) }}" class="lang-flag {% if current_lang == code %}lang-flag-active{% endif %}" title="{{ lang_meta[code].label }}" aria-label="{{ lang_meta[code].label }}">{{ lang_meta[code].flag }}</a>
+                {% endfor %}
+            </div>
         </div>
     </div>
 
-
-    <div class="bg-img" id="overlay" style="background-image: url('/static/{{ site_banner_path }}');">
-        <!-- NavBar -->
-            <section>
-                <nav class="navbar navbar-expand-lg navbar-light bg-dark shadow-lg bg-opacity-50  border-bottom border-warning ">
-                    <div class="container">
-                    <a class="navbar-brand" href="/">
-                        <img src="/static/{{ site_logo_path }}" width="100" height="50" class="d-inline-block align-top ml-3" alt="aqua-viva-logo">
+    <div class="bg-img{% if not site_banner_path %} bg-img-plain{% endif %}{% if active_page == 'home' %} home-top-light{% endif %}" id="overlay"{% if site_banner_path %} style="background-image: url('/static/{{ site_banner_path }}');"{% endif %}>
+        <section>
+            <nav class="navbar navbar-expand-lg av-navbar shadow-sm border-bottom" aria-label="{{ _('aria.main_nav') }}">
+                <div class="container">
+                    <a class="navbar-brand site-logo-link" href="{{ url_for('index') }}">
+                        <span class="site-logo-circle">
+                            <img src="/static/{{ site_logo_path }}" class="site-logo-img" alt="{{ _('logo.alt') }}">
+                        </span>
                     </a>
-                    <button class="navbar-toggler"
-                    type="button" 
-                    data-bs-toggle="collapse" 
-                    data-bs-target="#navbarNavAltMarkup" 
-                    aria-controls="navbarNavAltMarkup" 
-                    aria-expanded="false" 
-                    aria-label="Toggle navigation"
-                    >
-                    <span class="navbar-toggler-icon"></span>
+                    <button class="navbar-toggler av-menu-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="{{ _('menu.open') }}">
+                        <span class="av-menu-toggler-inner">
+                            {{ pencil_icon('menu', 28) }}
+                            <span class="av-menu-toggler-label">{{ _('menu.open') }}</span>
+                        </span>
                     </button>
                     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                         {% if session.get("admin_id") %}
-                        <ul class="navbar-nav ms-auto">
-                            <li class="{{'active' if active_page == 'reservations'}}"><a class="nav-link" href="/admin_panel">Reservations</a></li>
-                            <li class="{{'active' if active_page == 'create_rooms'}}" id="create_rooms"><a class="nav-link" href="/create_rooms" >Create Rooms</a></li>
-                            <li class="{{'active' if active_page == 'cms'}}"><a class="nav-link" href="/cms">CMS</a></li>
-                            <!--<li class="{{'active' if active_page == 'rate_plans'}}"><a class="nav-link" href="/rate_plans">Rate Plans</a></li>-->
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle {{'active' if active_page == 'rate_plans'}}" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                Rate Plans
-                                </a>
-                                <div class="dropdown-menu bg-dark opacity-75 " aria-labelledby="navbarDropdown">
-                                <a class="dropdown-item text-light" href="/rate_plans">Create Rate Plans</a>
-                                <a class="dropdown-item text-light" href="/view_rate_plans">View Rate plans</a>
-                                </div>
-                            </li>
-                            <li class="{{'active' if active_page == 'availability'}}"><a class="nav-link" href="/availability">Availability</a></li>
-
-                            <li class="nav-item"><a class="nav-link" href="/logout">Log out</a></li>
+                        <ul class="navbar-nav ms-auto align-items-lg-center">
+                            <li class="nav-item {{'active' if active_page == 'apartments'}}"><a class="nav-link" href="/manage_apartments">{{ _('nav.apartments') }}</a></li>
+                            <li class="nav-item {{'active' if active_page == 'cms'}}"><a class="nav-link" href="{{ url_for('cms') }}">{{ _('nav.cms') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-intro">Intro</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-localisation">{{ _('home.shortcut_location') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-about">{{ _('nav.about') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-spots">{{ _('home.shortcut_spots') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-guestbook">{{ _('nav.guestbook') }}</a></li>
+                            <li class="nav-item {{'active' if active_page == 'availability'}}"><a class="nav-link" href="/availability">{{ _('nav.availability') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms_preview_home') }}" target="_blank" rel="noopener">{{ _('nav.preview') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/logout">{{ _('nav.logout') }}</a></li>
                         </ul>
-
                         {% else %}
-
-                        <ul class="navbar-nav ms-auto mt-2">
-                            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/gallery">Gallery</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/prices">Prices</a></li>
-                            <li class="nav-item {{'active' if active_page == 'reservation'}}"><a class="nav-link" href="/">Reservation</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/about">About</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/admin_register">Register</a></li>
-                            <li class="nav-item mx-5"><a class="nav-link" href="/admin_login">Login</a></li>
+                        <ul class="navbar-nav ms-auto align-items-lg-center mt-2">
+                            <li class="nav-item {{'active' if active_page == 'home'}}"><a class="nav-link" href="{{ url_for('index') }}">{{ _('nav.home') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#appartements">{{ _('nav.apartments') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#localisation">{{ _('home.shortcut_location') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#qui-sommes-nous">{{ _('nav.about') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('prices') }}">{{ _('nav.prices') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }}</a></li>
+                            <li class="nav-item mx-lg-2"><a class="nav-link" href="/admin_login">{{ _('nav.login') }}</a></li>
                         </ul>
-
                         {% endif %}
-
                     </div>
                 </div>
-                </nav>
-            </section>
-    
-        <!--Main Templates -->
-    
-        {% if get_flashed_messages() %}
-                <header>
-                    <div class="alert alert-primary mb-0 text-center" role="alert">
-                        {{ get_flashed_messages() | join(" ") }}
-                    </div>
-                </header>
-            {% endif %}
+            </nav>
+        </section>
 
-    
-                <main class="py-5 bg-gradient bg-opacity-10 text-center">
-                    {% block search %}{% endblock %}
-                </main>
+        {% if get_flashed_messages() %}
+        <header>
+            <div class="alert av-alert mb-0 text-center" role="alert">{{ get_flashed_messages() | join(" ") }}</div>
+        </header>
+        {% endif %}
+
+        <main class="py-4 text-center av-main-hero">{% block search %}{% endblock %}</main>
     </div>
 
-                <main class="container-fluid mt-5 bg-gradient bg-opacity-10 text-center">
-                    {% block main %}{% endblock %}
-                </main>
+    <main class="container-fluid mt-4 mb-4 text-center av-main">{% block main %}{% endblock %}</main>
+    <main class="container-fluid p-4 mb-4 text-center av-main">{% block reservations %}{% endblock %}</main>
+    <main class="container-fluid mb-5 text-start av-main">{% block select_rooms %}{% endblock %}</main>
 
-                <main class="container-fluid p-5 mb-5 bg-gradient bg-opacity-10 text-center">
-                    {% block reservations %}{% endblock %}
-                </main>
+    <div class="av-page-end-spacer" aria-hidden="true"></div>
 
-                <main class="container-fluid bg-gradient bg-opacity-10 mb-5  text-start">
-                    {% block select_rooms %}{% endblock %}
-                </main>
-        
-
-            <!-- Footer -->
-            
-            <footer class="footerWrap p-3 bg-dark  bg-opacity-75 text-center text-white  shadow">
-                <div class="container">
-                    <p class="lead text-white">Developed for <strong class="text-danger text-"></strong> <a href="https://cs50.harvard.edu/x/2023/" target=”_blank” style="text-decoration:underline" class="text-warning"><strong>CS50x</strong></a>  - 2023 &copy; by
-                        <a href="https://github.com/Acrofil" target=”_blank” class="text-warning" style="text-decoration: underline;"><strong>A.P</strong></a></p>
-                    <a href="#" class="position-absolute bottom-0 end-0 p-3 mr-5">
-                        <i class="bi bi-arrow-up-circle text-warning h1 text-opacity-75"></i>
-                    </a>            
+    <footer class="footerWrap p-4 av-footer">
+        <div class="container">
+            <div class="row g-4 text-start">
+                <div class="col-md-4">
+                    <h2 class="h6 av-accent-text mb-3">{{ _('footer.explore') }}</h2>
+                    <ul class="list-unstyled av-footer-links mb-0">
+                        <li><a href="{{ url_for('index') }}#appartements">{{ _('nav.apartments') }}</a></li>
+                        <li><a href="{{ url_for('index') }}#localisation">{{ _('home.shortcut_location') }}</a></li>
+                        <li><a href="{{ url_for('index') }}#qui-sommes-nous">{{ _('nav.about') }}</a></li>
+                        <li><a href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
+                        <li><a href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
+                        <li><a href="{{ url_for('prices') }}">{{ _('nav.prices') }}</a></li>
+                    </ul>
                 </div>
-            </footer>
-
-        
-
-            
+                <div class="col-md-4">
+                    <h2 class="h6 av-accent-text mb-3">{{ _('footer.useful') }}</h2>
+                    <ul class="list-unstyled av-footer-links mb-0">
+                        <li><a href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+                        <li><a href="mailto:{{ site_email }}">{{ site_email }}</a></li>
+                        <li><a href="https://www.abritel.fr/location-vacances/p2662308" target="_blank" rel="noopener noreferrer">{{ _('footer.abritel') }}</a></li>
+                        <li><a href="https://www.openstreetmap.org/?mlat=42.027&mlon=8.768#map=14/42.027/8.768" target="_blank" rel="noopener noreferrer">{{ _('footer.map') }}</a></li>
+                        <li><a href="https://www.google.com/maps/search/?api=1&query=Calcatoggio+Corse" target="_blank" rel="noopener noreferrer">Google Maps</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4">
+                    <h2 class="h6 av-accent-text mb-3">Villa Aqua Viva</h2>
+                    <p class="av-footer-text small mb-2">{{ _('footer.place') }}</p>
+                    <p class="av-footer-text small mb-0">{{ _('footer.developed') }} <strong class="av-accent-text">Marine Bap</strong></p>
+                </div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="#overlay" class="av-accent-text text-decoration-none" aria-label="{{ _('aria.back_to_top') }}">↑</a>
+            </div>
+        </div>
+    </footer>
 </div>
 </body>
 </html>

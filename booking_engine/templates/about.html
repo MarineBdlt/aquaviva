@@ -5,8 +5,8 @@
 {{ _('title.about') }}
 {% endblock %}
 
-{% block meta_description %}{{ about_content.body|striptags|truncate(155, True, '…') }}{% endblock %}
-{% block og_title %}{{ about_content.title }} — Villa Aqua Viva{% endblock %}
+{% block meta_description %}{{ _('meta.about_description') }}{% endblock %}
+{% block og_title %}{{ about_content.title }} — {{ _('meta.default_og_title') }}{% endblock %}
 {% block canonical %}{{ url_for('about', _external=True) }}{% endblock %}
 
 {% block main %}
@@ -23,18 +23,17 @@
         </figure>
     </div>
     {% endif %}
-    <div class="lead text-dark about-body">
+    <div class="lead text-dark about-body av-prose">
         {% for paragraph in about_content.body.split('\n\n') %}
         {% if paragraph.strip() %}
         <p>{{ paragraph.strip() }}</p>
         {% endif %}
         {% endfor %}
     </div>
-    <p class="mt-4 mb-0">
-        <a class="av-inline-link" href="{{ url_for('index') }}#localisation">{{ _('home.shortcut_location') }} →</a>
-        · <a class="av-inline-link" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }} →</a>
-        · <a class="av-inline-link" href="{{ url_for('prices') }}">{{ _('nav.prices') }} →</a>
-        · <a class="av-inline-link" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp →</a>
+    <p class="av-btn-row mt-4 mb-0">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}#localisation">{{ _('home.shortcut_location') }}</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a>
+        <a class="btn btn-warning btn-sm" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </p>
 </div>
 {% endblock %}

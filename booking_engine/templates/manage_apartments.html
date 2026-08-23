@@ -7,8 +7,14 @@ Appartements
 
 {% block main %}
 <div class="container text-start">
+    <div class="av-admin-switch">
+        <a class="btn btn-sm {% if active_page == 'apartments' %}btn-warning active{% else %}btn-outline-secondary{% endif %}"
+           href="{{ url_for('manage_apartments') }}">{{ _('nav.admin_apartments') }}</a>
+        <a class="btn btn-sm {% if active_page == 'availability' %}btn-warning active{% else %}btn-outline-secondary{% endif %}"
+           href="{{ url_for('availability') }}">{{ _('nav.availability') }}</a>
+    </div>
     <h2 class="text-warning mb-2">Appartements à louer</h2>
-    <p class="mb-4">Gérez les appartements de la villa Aqua Viva : chambres, tarif et photos.</p>
+    <p class="mb-4">Gérez les appartements de La Casa Rosa : chambres, tarif et photos.</p>
 
     <div class="card p-3 mb-4">
         <h4>Ajouter un appartement</h4>
@@ -27,6 +33,10 @@ Appartements
                 <div class="col-md-3">
                     <label class="form-label" for="rate">Tarif par défaut (€ / nuit)</label>
                     <input class="form-control" id="rate" type="number" name="rate" min="0" step="1" placeholder="ex. 120" required />
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label" for="booking_url">Lien Airbnb / réservation en ligne (optionnel)</label>
+                    <input class="form-control" id="booking_url" type="url" name="booking_url" placeholder="https://www.airbnb.fr/rooms/…" />
                 </div>
                 <div class="col-md-12">
                     <label class="form-label" for="description">Description</label>
@@ -59,6 +69,11 @@ Appartements
                 {% if apartment.description %}
                 <p class="mt-2 mb-0 text-muted">{{ apartment.description }}</p>
                 {% endif %}
+                {% if apartment.booking_url %}
+                <p class="mt-2 mb-0 small">
+                    <a href="{{ apartment.booking_url }}" target="_blank" rel="noopener noreferrer">Airbnb →</a>
+                </p>
+                {% endif %}
             </div>
             <form action="{{ url_for('manage_apartments') }}" method="post" onsubmit="return confirm('Supprimer cet appartement et ses photos ?');">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
@@ -87,6 +102,10 @@ Appartements
             <div class="col-md-3">
                 <label class="form-label">Description</label>
                 <input class="form-control" type="text" name="description" value="{{ apartment.description or '' }}" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Lien Airbnb</label>
+                <input class="form-control" type="url" name="booking_url" value="{{ apartment.booking_url or '' }}" placeholder="https://www.airbnb.fr/rooms/…" />
             </div>
             <div class="col-md-2">
                 <button class="btn btn-warning w-100" type="submit">Enregistrer</button>

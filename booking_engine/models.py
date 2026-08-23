@@ -133,6 +133,7 @@ class Apartment(db.Model):
     bedrooms = db.Column(db.Integer, nullable=False)
     rate = db.Column(db.Integer, nullable=False)
     description = db.Column(db.Text, nullable=True)
+    booking_url = db.Column(db.String(500), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
     images = db.relationship(
         "ApartmentImage",
@@ -146,11 +147,11 @@ class Apartment(db.Model):
         cascade="all, delete-orphan",
         order_by="ApartmentReservation.check_in",
     )
-    monthly_rates = db.relationship(
-        "ApartmentMonthlyRate",
+    season_rates = db.relationship(
+        "ApartmentSeasonRate",
         backref="apartment",
         cascade="all, delete-orphan",
-        order_by="ApartmentMonthlyRate.year, ApartmentMonthlyRate.month",
+        order_by="ApartmentSeasonRate.start_date",
     )
 
 
@@ -162,15 +163,13 @@ class ApartmentImage(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
 
 
-class ApartmentMonthlyRate(db.Model):
+class ApartmentSeasonRate(db.Model):
     id = db.Column(db.Integer, primary_key=True, nullable=False)
     apartment_id = db.Column(db.Integer, db.ForeignKey("apartment.id"), nullable=False)
-    year = db.Column(db.Integer, nullable=False)
-    month = db.Column(db.Integer, nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
     rate = db.Column(db.Integer, nullable=False)
-    __table_args__ = (
-        db.UniqueConstraint("apartment_id", "year", "month", name="uq_apartment_month_rate"),
-    )
+    label = db.Column(db.String(80), nullable=True)
 
 
 class ApartmentReservation(db.Model):

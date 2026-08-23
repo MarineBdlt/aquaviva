@@ -13,8 +13,14 @@
 </style>
 
 <div class="container text-start">
+    <div class="av-admin-switch">
+        <a class="btn btn-sm {% if active_page == 'apartments' %}btn-warning active{% else %}btn-outline-secondary{% endif %}"
+           href="{{ url_for('manage_apartments') }}">{{ _('nav.admin_apartments') }}</a>
+        <a class="btn btn-sm {% if active_page == 'availability' %}btn-warning active{% else %}btn-outline-secondary{% endif %}"
+           href="{{ url_for('availability') }}">{{ _('nav.availability') }}</a>
+    </div>
     <h2 class="text-warning mb-2">{{ _('title.availability') }}</h2>
-    <p class="mb-3">Calendrier et tarifs par appartement. Définissez un prix par défaut, puis un tarif pour chaque mois de l’année.</p>
+    <p class="mb-3">Calendrier et réservations par appartement. Définissez un tarif par défaut et des périodes saisonnières (du … au …).</p>
 
     <div class="d-flex justify-content-between align-items-center bg-light border border-info shadow p-2 mb-4">
         <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('availability', month=prev_month) }}">← Mois précédent</a>
@@ -35,8 +41,8 @@
                 <p class="mb-0 text-muted">
                     {{ apartment.bedrooms }} chambre{{ 's' if apartment.bedrooms > 1 else '' }}
                     · <strong>{{ cal.effective_rate }} €</strong> / nuit
-                    {% if cal.is_monthly_override %}
-                    <span class="badge bg-warning text-dark">Tarif {{ month_label }}</span>
+                    {% if cal.rate_source == 'season' %}
+                    <span class="badge bg-warning text-dark">Tarif saison</span>
                     {% else %}
                     <span class="badge bg-secondary">Tarif par défaut</span>
                     {% endif %}
@@ -57,7 +63,6 @@
                 <input type="hidden" name="action" value="update_default_rate" />
                 <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
                 <input type="hidden" name="return_month" value="{{ current_month_query }}" />
-                <input type="hidden" name="rates_year" value="{{ rates_year }}" />
                 <div class="col-md-4">
                     <label class="form-label">Tarif par défaut (€ / nuit)</label>
                     <input class="form-control" type="number" name="default_rate" min="0" step="1" value="{{ apartment.rate }}" required />
@@ -67,45 +72,69 @@
                 </div>
             </form>
 
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <strong>Tarifs mensuels {{ rates_year }}</strong>
-                <div>
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('availability', month=current_month_query, year=prev_rates_year) }}#apt-{{ apartment.id }}">← {{ prev_rates_year }}</a>
-                    <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('availability', month=current_month_query, year=next_rates_year) }}#apt-{{ apartment.id }}">{{ next_rates_year }} →</a>
-                </div>
+            <h6 class="mb-2 mt-4">Périodes saisonnières</h6>
+            <p class="small text-muted mb-2">Ex. haute saison du 01-07-2026 au 31-08-2026.</p>
+            {% if cal.season_rates %}
+            <div class="table-responsive mb-3">
+                <table class="table table-sm table-striped align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Du</th>
+                            <th>Au</th>
+                            <th>Libellé</th>
+                            <th>Tarif</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for season in cal.season_rates %}
+                        <tr>
+                            <td>{{ season.start_date.strftime('%d-%m-%Y') }}</td>
+                            <td>{{ season.end_date.strftime('%d-%m-%Y') }}</td>
+                            <td>{{ season.label or '—' }}</td>
+                            <td><strong>{{ season.rate }} €</strong> / nuit</td>
+                            <td>
+                                <form action="{{ url_for('apartment_rates') }}" method="post" onsubmit="return confirm('Supprimer cette période ?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                    <input type="hidden" name="action" value="delete_season_rate" />
+                                    <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
+                                    <input type="hidden" name="season_id" value="{{ season.id }}" />
+                                    <input type="hidden" name="return_month" value="{{ current_month_query }}" />
+                                    <button class="btn btn-sm btn-outline-danger" type="submit">Supprimer</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-            <p class="small text-muted mb-2">Laissez un mois vide pour utiliser le tarif par défaut ({{ apartment.rate }} €).</p>
-            <form action="{{ url_for('apartment_rates') }}" method="post">
+            {% else %}
+            <p class="small text-muted mb-3">Aucune période définie.</p>
+            {% endif %}
+            <form action="{{ url_for('apartment_rates') }}" method="post" class="row g-2 align-items-end mb-4 season-rate-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <input type="hidden" name="action" value="update_year_rates" />
+                <input type="hidden" name="action" value="add_season_rate" />
                 <input type="hidden" name="apartment_id" value="{{ apartment.id }}" />
                 <input type="hidden" name="return_month" value="{{ current_month_query }}" />
-                <input type="hidden" name="year" value="{{ rates_year }}" />
-                <input type="hidden" name="rates_year" value="{{ rates_year }}" />
-                <div class="row g-2">
-                    {% for yr in cal.year_rates %}
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <label class="form-label mb-1">
-                            {{ yr.name }}
-                            {% if yr.is_override %}
-                            <span class="badge bg-warning text-dark">spécifique</span>
-                            {% else %}
-                            <span class="badge bg-secondary">défaut</span>
-                            {% endif %}
-                        </label>
-                        <input
-                            class="form-control"
-                            type="number"
-                            name="rate_{{ yr.month }}"
-                            min="0"
-                            step="1"
-                            placeholder="{{ apartment.rate }}"
-                            value="{{ yr.override_rate }}"
-                        />
-                    </div>
-                    {% endfor %}
+                <div class="col-md-2">
+                    <label class="form-label">Du</label>
+                    <input class="form-control season-start" type="text" name="season_start" placeholder="jj-mm-aaaa" required autocomplete="off" />
                 </div>
-                <button class="btn btn-warning mt-3" type="submit">Enregistrer les 12 mois</button>
+                <div class="col-md-2">
+                    <label class="form-label">Au</label>
+                    <input class="form-control season-end" type="text" name="season_end" placeholder="jj-mm-aaaa" required autocomplete="off" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Libellé (optionnel)</label>
+                    <input class="form-control" type="text" name="season_label" placeholder="ex. Haute saison" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Tarif (€ / nuit)</label>
+                    <input class="form-control" type="number" name="season_rate" min="0" step="1" required />
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-warning" type="submit">Ajouter la période</button>
+                </div>
             </form>
         </div>
 
@@ -251,7 +280,7 @@ document.querySelectorAll('.js-day-pick').forEach((cell) => {
 });
 
 $(function () {
-  $('.apt-check-in, .apt-check-out').datepicker({
+  $('.apt-check-in, .apt-check-out, .season-start, .season-end').datepicker({
     format: 'dd-mm-yyyy',
     todayHighlight: true,
     autoclose: true

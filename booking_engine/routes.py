@@ -18,7 +18,7 @@ from booking_engine.models import (
     Apartment,
     ApartmentImage,
     ApartmentReservation,
-    ApartmentMonthlyRate,
+    ApartmentSeasonRate,
     GuestbookEntry,
 )
 from booking_engine.i18n import (
@@ -51,20 +51,28 @@ import uuid
 CMS_DEFAULTS = {
     "home": {
         "fr": (
-            "Villa Aqua Viva — Acqua Linda d'Orcino",
-            "F3 dans une villa très calme, grande terrasse vue sur mer, plage à 5 minutes à pied. Idéal pour un séjour détente en couple, entre amis ou en famille.",
+            "La Casa Rosa",
+            "Location vacances en Corse à Calcatoggio — Acqua Linda d'Orcino. "
+            "Appartements calmes vue mer, grande terrasse, plage à 5 minutes à pied. "
+            "Idéal en couple, entre amis ou en famille pour vos vacances en Corse-du-Sud.",
         ),
         "en": (
-            "Villa Aqua Viva — Acqua Linda d'Orcino",
-            "An F3 apartment in a very quiet villa, large sea-view terrace, beach a 5-minute walk away. Perfect for a relaxing stay as a couple, with friends or family.",
+            "La Casa Rosa",
+            "Holiday rental in Corsica at Calcatoggio — Acqua Linda d'Orcino. "
+            "Quiet sea-view apartments, large terrace, beach a 5-minute walk away. "
+            "Perfect for couples, friends or families on holiday in Southern Corsica.",
         ),
         "pt": (
-            "Villa Aqua Viva — Acqua Linda d'Orcino",
-            "Apartamento F3 numa villa muito calma, grande terraço com vista para o mar, praia a 5 minutos a pé. Ideal para umas férias a dois, com amigos ou em família.",
+            "La Casa Rosa",
+            "Aluguel de férias na Córsega em Calcatoggio — Acqua Linda d'Orcino. "
+            "Apartamentos calmos com vista para o mar, grande terraço, praia a 5 minutos a pé. "
+            "Ideal a dois, com amigos ou em família nas férias na Córsega do Sul.",
         ),
         "it": (
-            "Villa Aqua Viva — Acqua Linda d'Orcino",
-            "Appartamento F3 in una villa molto tranquilla, grande terrazza vista mare, spiaggia a 5 minuti a piedi. Ideale per una vacanza relax in coppia, con amici o in famiglia.",
+            "La Casa Rosa",
+            "Affitto vacanze in Corsica a Calcatoggio — Acqua Linda d'Orcino. "
+            "Appartamenti tranquilli vista mare, grande terrazza, spiaggia a 5 minuti a piedi. "
+            "Ideale in coppia, con amici o in famiglia per le vacanze in Corsica del Sud.",
         ),
     },
     "about": {
@@ -129,16 +137,16 @@ CMS_DEFAULTS = {
         ),
     },
     "prices": {
-        "fr": ("Tarifs Aqua Viva", "Consultez nos tarifs et offres actuelles."),
-        "en": ("Aqua Viva Prices", "Browse our prices and current offers."),
-        "pt": ("Preços Aqua Viva", "Consulte os nossos preços e ofertas atuais."),
-        "it": ("Prezzi Aqua Viva", "Consultate le nostre tariffe e le offerte attuali."),
+        "fr": ("Tarifs La Casa Rosa", "Consultez nos tarifs et offres actuelles."),
+        "en": ("La Casa Rosa Prices", "Browse our prices and current offers."),
+        "pt": ("Preços La Casa Rosa", "Consulte os nossos preços e ofertas atuais."),
+        "it": ("Prezzi La Casa Rosa", "Consultate le nostre tariffe e le offerte attuali."),
     },
     "gallery": {
-        "fr": ("Galerie Aqua Viva", "Explorez les espaces et l'ambiance de la villa."),
-        "en": ("Aqua Viva Gallery", "Explore our spaces and atmosphere."),
-        "pt": ("Galeria Aqua Viva", "Explore os espaços e o ambiente da villa."),
-        "it": ("Galleria Aqua Viva", "Esplorate gli spazi e l’atmosfera della villa."),
+        "fr": ("Galerie La Casa Rosa", "Explorez les espaces et l'ambiance de la villa."),
+        "en": ("La Casa Rosa Gallery", "Explore our spaces and atmosphere."),
+        "pt": ("Galeria La Casa Rosa", "Explore os espaços e o ambiente da villa."),
+        "it": ("Galleria La Casa Rosa", "Esplorate gli spazi e l’atmosfera della villa."),
     },
     "location": {
         lang: (loc["title"], f"{loc['place']}\n{loc['region']}\n{loc['summary']}")
@@ -151,17 +159,18 @@ CMS_DEFAULTS = {
 
 
 _CMS_READY = False
+_CONTENT_SEED_VERSION = "casa-rosa-3"
 _SETTING_DEFAULTS = {
-    "banner_image": "images/banner-5.png",
+    "banner_image": "uploads/IMG_6897.jpg",
     "home_background_image": "",
     "home_slider_ids": "",
     "home_slider_mode": "selected",
     "about_image": "",
     "site_phone": "+55 11 94340-1825",
     "site_email": "anaisacquaviva@gmail.com",
-    "site_logo": "images/villa-aqua-viva-postcard.png",
+    "site_logo": "images/la-casa-rosa-logo.jpg",
+    "airbnb_url": "",
 }
-
 
 def get_settings(*keys):
     """Batch-load SiteSetting values with defaults."""
@@ -174,64 +183,171 @@ def get_settings(*keys):
 
 def ensure_cms_defaults():
     global _CMS_READY
-    if _CMS_READY:
+    if not _CMS_READY:
+        db.create_all()
+
+        existing_pages = {row.page_key for row in SiteContent.query.with_entities(SiteContent.page_key).all()}
+        for page_base, lang_map in CMS_DEFAULTS.items():
+            for lang, values in lang_map.items():
+                page_key = content_page_key(page_base, lang)
+                if page_key not in existing_pages:
+                    db.session.add(SiteContent(page_key=page_key, title=values[0], body=values[1]))
+                    existing_pages.add(page_key)
+            if page_base not in existing_pages:
+                en_vals = lang_map.get("en") or next(iter(lang_map.values()))
+                db.session.add(SiteContent(page_key=page_base, title=en_vals[0], body=en_vals[1]))
+                existing_pages.add(page_base)
+
+        existing_settings = {
+            row.setting_key
+            for row in SiteSetting.query.filter(
+                SiteSetting.setting_key.in_(list(_SETTING_DEFAULTS.keys()))
+            ).all()
+        }
+        for key, value in _SETTING_DEFAULTS.items():
+            if key not in existing_settings:
+                db.session.add(SiteSetting(setting_key=key, setting_value=value))
+
+        nearby_spots_keys = [f"nearby_list_{lang}" for lang in SUPPORTED_LANGS] + [
+            f"spots_list_{lang}" for lang in SUPPORTED_LANGS
+        ]
+        existing_lists = {
+            row.setting_key
+            for row in SiteSetting.query.filter(SiteSetting.setting_key.in_(nearby_spots_keys)).all()
+        }
+        for lang in SUPPORTED_LANGS:
+            nearby_key = f"nearby_list_{lang}"
+            if nearby_key not in existing_lists:
+                nearby = NEARBY.get(lang, NEARBY["fr"])
+                db.session.add(
+                    SiteSetting(
+                        setting_key=nearby_key,
+                        setting_value=json.dumps(
+                            {"title": nearby["title"], "list": nearby["list"]},
+                            ensure_ascii=False,
+                        ),
+                    )
+                )
+            spots_key = f"spots_list_{lang}"
+            if spots_key not in existing_lists:
+                spots = GOOD_SPOTS.get(lang, GOOD_SPOTS["fr"])
+                db.session.add(
+                    SiteSetting(
+                        setting_key=spots_key,
+                        setting_value=json.dumps(spots["list"], ensure_ascii=False),
+                    )
+                )
+
+        db.session.commit()
+        _CMS_READY = True
+
+    _ensure_apartment_booking_url_column()
+    _ensure_apartment_season_rates_table()
+    _ensure_site_logo()
+    _apply_casa_rosa_content_seed()
+
+
+def _ensure_apartment_season_rates_table():
+    """Create apartment_season_rate table on existing SQLite DBs."""
+    from sqlalchemy import inspect
+
+    try:
+        tables = set(inspect(db.engine).get_table_names())
+    except Exception:
         return
-    db.create_all()
+    if "apartment_season_rate" in tables:
+        return
+    ApartmentSeasonRate.__table__.create(db.engine)
 
-    existing_pages = {row.page_key for row in SiteContent.query.with_entities(SiteContent.page_key).all()}
-    for page_base, lang_map in CMS_DEFAULTS.items():
-        for lang, values in lang_map.items():
-            page_key = content_page_key(page_base, lang)
-            if page_key not in existing_pages:
-                db.session.add(SiteContent(page_key=page_key, title=values[0], body=values[1]))
-                existing_pages.add(page_key)
-        if page_base not in existing_pages:
-            en_vals = lang_map.get("en") or next(iter(lang_map.values()))
-            db.session.add(SiteContent(page_key=page_base, title=en_vals[0], body=en_vals[1]))
-            existing_pages.add(page_base)
 
-    existing_settings = {
-        row.setting_key
-        for row in SiteSetting.query.filter(
-            SiteSetting.setting_key.in_(list(_SETTING_DEFAULTS.keys()))
-        ).all()
-    }
-    for key, value in _SETTING_DEFAULTS.items():
-        if key not in existing_settings:
-            db.session.add(SiteSetting(setting_key=key, setting_value=value))
+def _ensure_apartment_booking_url_column():
+    """SQLite-safe add of apartment.booking_url if missing."""
+    from sqlalchemy import inspect, text
 
-    nearby_spots_keys = [f"nearby_list_{lang}" for lang in SUPPORTED_LANGS] + [
-        f"spots_list_{lang}" for lang in SUPPORTED_LANGS
-    ]
-    existing_lists = {
-        row.setting_key
-        for row in SiteSetting.query.filter(SiteSetting.setting_key.in_(nearby_spots_keys)).all()
-    }
+    try:
+        cols = {c["name"] for c in inspect(db.engine).get_columns("apartment")}
+    except Exception:
+        return
+    if "booking_url" in cols:
+        return
+    db.session.execute(text("ALTER TABLE apartment ADD COLUMN booking_url VARCHAR(500)"))
+    db.session.commit()
+
+
+_LEGACY_LOGO_PATHS = frozenset({
+    "images/villa-aqua-viva-postcard.png",
+    "images/villa-acqua-viva-postcard.png",
+    "images/villa-aqua-viva-pencil.png",
+    "images/villa-acqua-viva-pencil.png",
+    "images/la-casa-rosa-logo.png",
+    "images/la-casa-rosa-postcard.png",
+})
+
+
+def _ensure_site_logo():
+    """Point default/legacy logos at the text-free La Casa Rosa illustration."""
+    logo = SiteSetting.query.filter_by(setting_key="site_logo").first()
+    if not logo:
+        return
+    value = (logo.setting_value or "").strip()
+    if (
+        not value
+        or value in _LEGACY_LOGO_PATHS
+        or "villa-aqua-viva" in value
+        or "villa-acqua-viva" in value
+    ):
+        logo.setting_value = _SETTING_DEFAULTS["site_logo"]
+        db.session.commit()
+
+
+def _apply_casa_rosa_content_seed():
+    """One-shot refresh of home branding + bonnes adresses (photos/links)."""
+    ver = SiteSetting.query.filter_by(setting_key="content_seed_version").first()
+    if ver and ver.setting_value == _CONTENT_SEED_VERSION:
+        return
+
+    for lang, values in CMS_DEFAULTS["home"].items():
+        page_key = content_page_key("home", lang)
+        page = SiteContent.query.filter_by(page_key=page_key).first()
+        if page:
+            page.title = values[0]
+            page.body = values[1]
+        else:
+            db.session.add(SiteContent(page_key=page_key, title=values[0], body=values[1]))
+
+    home_legacy = SiteContent.query.filter_by(page_key="home").first()
+    if home_legacy:
+        home_legacy.title = CMS_DEFAULTS["home"]["fr"][0]
+        home_legacy.body = CMS_DEFAULTS["home"]["fr"][1]
+
     for lang in SUPPORTED_LANGS:
-        nearby_key = f"nearby_list_{lang}"
-        if nearby_key not in existing_lists:
-            nearby = NEARBY.get(lang, NEARBY["fr"])
-            db.session.add(
-                SiteSetting(
-                    setting_key=nearby_key,
-                    setting_value=json.dumps(
-                        {"title": nearby["title"], "list": nearby["list"]},
-                        ensure_ascii=False,
-                    ),
-                )
-            )
+        spots = GOOD_SPOTS.get(lang, GOOD_SPOTS["fr"])
         spots_key = f"spots_list_{lang}"
-        if spots_key not in existing_lists:
-            spots = GOOD_SPOTS.get(lang, GOOD_SPOTS["fr"])
+        row = SiteSetting.query.filter_by(setting_key=spots_key).first()
+        payload = json.dumps(spots["list"], ensure_ascii=False)
+        if row:
+            row.setting_value = payload
+        else:
+            db.session.add(SiteSetting(setting_key=spots_key, setting_value=payload))
+
+        spots_page_key = content_page_key("spots", lang)
+        spots_page = SiteContent.query.filter_by(page_key=spots_page_key).first()
+        if spots_page:
+            spots_page.title = spots["title"]
+            spots_page.body = spots["intro"]
+        else:
             db.session.add(
-                SiteSetting(
-                    setting_key=spots_key,
-                    setting_value=json.dumps(spots["list"], ensure_ascii=False),
-                )
+                SiteContent(page_key=spots_page_key, title=spots["title"], body=spots["intro"])
             )
+
+    if ver:
+        ver.setting_value = _CONTENT_SEED_VERSION
+    else:
+        db.session.add(
+            SiteSetting(setting_key="content_seed_version", setting_value=_CONTENT_SEED_VERSION)
+        )
 
     db.session.commit()
-    _CMS_READY = True
 
 
 def get_site_contents(*page_keys):
@@ -297,12 +413,19 @@ def set_language(lang):
 
 @app.context_processor
 def inject_site_banner():
-    settings = get_settings("site_phone", "site_email", "site_logo", "banner_image")
+    settings = get_settings(
+        "site_phone", "site_email", "site_logo", "banner_image", "airbnb_url"
+    )
+    phone = settings["site_phone"] or ""
+    phone_tel = "".join(ch for ch in phone if ch.isdigit() or ch == "+")
     context = {
-        "site_phone": settings["site_phone"],
+        "site_phone": phone,
+        "site_phone_tel": phone_tel,
         "site_email": settings["site_email"],
         "site_logo_path": settings["site_logo"],
         "site_whatsapp_url": "https://wa.me/5511943401825",
+        "site_airbnb_url": (settings.get("airbnb_url") or "").strip(),
+        "site_booking_url": url_for("book_online"),
         "site_banner_path": "",
     }
     if request.path not in ("/", "/cms/preview"):
@@ -313,7 +436,7 @@ def get_or_create_single_gite():
     room = Room.query.order_by(Room.id.asc()).first()
     if not room:
         room = Room(
-            name="Gite Aqua Viva",
+            name="Gite Acqua Viva",
             max_guests=4,
             min_guests=1,
             max_adults=4,
@@ -402,24 +525,53 @@ def apartment_period_is_free(apartment_id, check_in, check_out, exclude_id=None)
     return query.first() is None
 
 
-def get_apartment_rate_for_month(apartment, year, month, monthly_rates=None):
-    """Effective nightly rate for a given month (monthly override or default)."""
-    if monthly_rates is None:
-        override = ApartmentMonthlyRate.query.filter_by(
-            apartment_id=apartment.id, year=year, month=month
-        ).first()
-        if override:
-            return override.rate, True
-        return apartment.rate, False
-    override = monthly_rates.get(month)
-    if override is not None:
-        return override, True
-    return apartment.rate, False
+def _parse_admin_date(raw):
+    if not raw:
+        return None
+    raw = raw.strip()
+    for fmt in ("%d-%m-%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(raw, fmt).date()
+        except ValueError:
+            continue
+    return None
 
 
-def load_apartment_monthly_rates(apartment_id, year):
-    rows = ApartmentMonthlyRate.query.filter_by(apartment_id=apartment_id, year=year).all()
-    return {row.month: row.rate for row in rows}
+def _match_season_rate(season_rates, day):
+    matches = [s for s in season_rates if s.start_date <= day <= s.end_date]
+    if not matches:
+        return None
+    return min(matches, key=lambda s: ((s.end_date - s.start_date).days, s.id))
+
+
+def load_apartment_season_rates(apartment_id):
+    return (
+        ApartmentSeasonRate.query.filter_by(apartment_id=apartment_id)
+        .order_by(ApartmentSeasonRate.start_date.asc())
+        .all()
+    )
+
+
+def get_apartment_rate_for_date(apartment, day, season_rates=None):
+    """Effective nightly rate for a calendar day (season or default)."""
+    if isinstance(day, datetime):
+        day = day.date()
+    if season_rates is None:
+        season_rates = load_apartment_season_rates(apartment.id)
+    season = _match_season_rate(season_rates, day)
+    if season:
+        return season.rate, "season", season
+    return apartment.rate, "default", None
+
+
+def get_apartment_rate_for_month(apartment, year, month, season_rates=None):
+    """Effective nightly rate shown for a month (uses the 15th when possible)."""
+    from calendar import monthrange
+
+    _, last = monthrange(year, month)
+    mid_day = datetime(year, month, min(15, last)).date()
+    rate, source, _ = get_apartment_rate_for_date(apartment, mid_day, season_rates=season_rates)
+    return rate, source
 
 
 def ensure_room_availability_rows(room, start_date, end_date):
@@ -563,8 +715,74 @@ def gallery():
 
 @app.route("/prices", methods=["GET"])
 def prices():
+    # Public prices page hidden for now (content felt empty); keep route for old links.
+    return redirect(url_for("index"))
+
+
+@app.route("/reserver", methods=["GET", "POST"])
+def book_online():
+    """Simple booking enquiry form — emails the configured site address."""
     ensure_cms_defaults()
-    return render_template("prices.html", prices_content=get_site_content("prices"))
+    settings = get_settings("site_email", "site_phone")
+    apartments = Apartment.query.order_by(Apartment.name.asc()).all()
+    preselect = request.args.get("apartment_id") or request.form.get("apartment_id")
+
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip()
+        phone = (request.form.get("phone") or "").strip()
+        check_in = (request.form.get("check_in") or "").strip()
+        check_out = (request.form.get("check_out") or "").strip()
+        message = (request.form.get("message") or "").strip()
+        apartment_id = (request.form.get("apartment_id") or "").strip()
+
+        if not name or not email or not message:
+            flash(_("book.required"))
+            return redirect(url_for("book_online"))
+
+        apt_label = ""
+        if apartment_id.isdigit():
+            apt = Apartment.query.filter_by(id=int(apartment_id)).first()
+            if apt:
+                apt_label = apt.name
+
+        recipient = (settings.get("site_email") or "").strip()
+        if not recipient:
+            flash(_("book.no_email"))
+            return redirect(url_for("book_online"))
+
+        body = (
+            f"Nouvelle demande de réservation — La Casa Rosa\n\n"
+            f"Nom : {name}\n"
+            f"E-mail : {email}\n"
+            f"Téléphone : {phone or '—'}\n"
+            f"Appartement : {apt_label or 'Non précisé'}\n"
+            f"Arrivée : {check_in or '—'}\n"
+            f"Départ : {check_out or '—'}\n\n"
+            f"Message :\n{message}\n"
+        )
+        sender = app.config.get("MAIL_USERNAME") or recipient
+        try:
+            msg = Message(
+                subject=f"[La Casa Rosa] Demande de {name}",
+                sender=sender,
+                recipients=[recipient],
+                reply_to=email,
+                body=body,
+            )
+            mail.send(msg)
+            flash(_("book.thanks"))
+        except Exception:
+            flash(_("book.mail_error"))
+        return redirect(url_for("book_online"))
+
+    return render_template(
+        "book.html",
+        apartments=apartments,
+        preselect=preselect,
+        site_email=settings["site_email"],
+        site_phone=settings["site_phone"],
+    )
 
 
 @app.route("/about", methods=["GET"])
@@ -804,7 +1022,7 @@ def cms():
 
         if action == "update_content":
             lang = get_locale()
-            pages = ("home", "about", "prices", "gallery")
+            pages = ("home", "about", "gallery")
             updated = []
             for page_key in pages:
                 title = request.form.get(f"{page_key}_title")
@@ -828,7 +1046,6 @@ def cms():
                 anchor = {
                     "home": "#section-intro",
                     "about": "#section-about",
-                    "prices": "#section-prices",
                 }.get(updated[0], "")
                 return redirect(f"/cms{anchor}")
             flash("Aucun texte à enregistrer.")
@@ -837,11 +1054,19 @@ def cms():
         if action == "update_contact":
             phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
             email = SiteSetting.query.filter_by(setting_key="site_email").first()
-            phone.setting_value = request.form.get("site_phone", phone.setting_value)
-            email.setting_value = request.form.get("site_email", email.setting_value)
+            airbnb = SiteSetting.query.filter_by(setting_key="airbnb_url").first()
+            if phone:
+                phone.setting_value = request.form.get("site_phone", phone.setting_value)
+            if email:
+                email.setting_value = request.form.get("site_email", email.setting_value)
+            airbnb_val = (request.form.get("airbnb_url") or "").strip()
+            if airbnb:
+                airbnb.setting_value = airbnb_val
+            else:
+                db.session.add(SiteSetting(setting_key="airbnb_url", setting_value=airbnb_val))
             db.session.commit()
-            flash("Contact details updated.")
-            return redirect("/cms")
+            flash("Contact et lien Airbnb enregistrés.")
+            return redirect("/cms#section-global")
 
         if action == "upload_banner":
             return _cms_save_uploaded_setting(
@@ -965,6 +1190,34 @@ def cms():
                 flash("Message du livre d’or approuvé.")
             return redirect("/cms#section-guestbook")
 
+        if action == "add_guestbook":
+            name = (request.form.get("author_name") or "").strip()
+            city = (request.form.get("author_city") or "").strip()
+            message = (request.form.get("message") or "").strip()
+            rating_raw = (request.form.get("rating") or "").strip()
+            rating = (
+                int(rating_raw)
+                if rating_raw.isdigit() and 1 <= int(rating_raw) <= 5
+                else None
+            )
+            if not name or not message:
+                flash("Nom et message sont requis pour le livre d’or.")
+                return redirect("/cms#section-guestbook")
+            if len(message) > 800:
+                message = message[:800]
+            db.session.add(
+                GuestbookEntry(
+                    author_name=name[:100],
+                    author_city=city[:100] if city else None,
+                    message=message,
+                    rating=rating,
+                    is_approved=True,
+                )
+            )
+            db.session.commit()
+            flash("Message du livre d’or publié.")
+            return redirect("/cms#section-guestbook")
+
         if action == "delete_guestbook":
             entry_id = request.form.get("entry_id")
             entry = GuestbookEntry.query.filter_by(id=entry_id).first()
@@ -989,6 +1242,7 @@ def cms():
     site_phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
     site_email = SiteSetting.query.filter_by(setting_key="site_email").first()
     site_logo = SiteSetting.query.filter_by(setting_key="site_logo").first()
+    airbnb_setting = SiteSetting.query.filter_by(setting_key="airbnb_url").first()
     slider_setting = SiteSetting.query.filter_by(setting_key="home_slider_ids").first()
     current_slider_ids = []
     if slider_setting and slider_setting.setting_value:
@@ -1029,6 +1283,7 @@ def cms():
         site_phone=site_phone.setting_value,
         site_email=site_email.setting_value,
         site_logo_path=site_logo.setting_value,
+        airbnb_url=(airbnb_setting.setting_value if airbnb_setting else ""),
         current_slider_ids=current_slider_ids,
         nearby_title=villa["nearby"].get("title", ""),
         nearby_list_text=nearby_list_to_text(villa["nearby"]),
@@ -1130,19 +1385,32 @@ def robots_txt():
 @app.route("/sitemap.xml")
 def sitemap_xml():
     pages = [
-        url_for("index", _external=True),
-        url_for("apartments_public", _external=True),
-        url_for("prices", _external=True),
-        url_for("about", _external=True),
+        (url_for("index", _external=True), "1.0", "daily"),
+        (url_for("apartments_public", _external=True), "0.9", "weekly"),
+        (url_for("about", _external=True), "0.8", "monthly"),
+        (url_for("book_online", _external=True), "0.7", "monthly"),
     ]
-    urls = "".join(
-        f"<url><loc>{page}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
-        for page in pages
-    )
+    urls = []
+    for page, priority, freq in pages:
+        urls.append(
+            "<url>"
+            f"<loc>{page}</loc>"
+            f"<changefreq>{freq}</changefreq>"
+            f"<priority>{priority}</priority>"
+            "</url>"
+        )
+        for lang in ("fr", "en", "pt", "it"):
+            urls.append(
+                "<url>"
+                f"<loc>{page}?lang={lang}</loc>"
+                f"<changefreq>{freq}</changefreq>"
+                f"<priority>{priority}</priority>"
+                "</url>"
+            )
     xml = (
         '<?xml version="1.0" encoding="UTF-8"?>'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-        f"{urls}</urlset>"
+        f"{''.join(urls)}</urlset>"
     )
     return app.response_class(xml, mimetype="application/xml")
 
@@ -1154,7 +1422,7 @@ def create_rooms():
     room = get_or_create_single_gite()
 
     if request.method == "POST":
-        room_name = request.form.get("room") or "Gite Aqua Viva"
+        room_name = request.form.get("room") or "Gite Acqua Viva"
         room_image = request.files.get("room_image")
         room_description = request.form.get("room_description")
         
@@ -1233,9 +1501,9 @@ def apartments_public():
     calendars = []
     for apartment in apartments:
         maps = build_apartment_calendar_maps(apartment, month_start, next_month_start)
-        month_rates = load_apartment_monthly_rates(apartment.id, month_start.year)
-        effective_rate, is_monthly_override = get_apartment_rate_for_month(
-            apartment, month_start.year, month_start.month, month_rates
+        season_rates = load_apartment_season_rates(apartment.id)
+        effective_rate, rate_source = get_apartment_rate_for_month(
+            apartment, month_start.year, month_start.month, season_rates
         )
         calendars.append(
             {
@@ -1246,7 +1514,7 @@ def apartments_public():
                 "occupied_dates": maps["occupied_dates"],
                 "occupied_map": maps["occupied_map"],
                 "effective_rate": effective_rate,
-                "is_monthly_override": is_monthly_override,
+                "rate_source": rate_source,
             }
         )
     return render_template(
@@ -1297,6 +1565,7 @@ def manage_apartments():
                 bedrooms=bedrooms,
                 rate=rate,
                 description=description or None,
+                booking_url=(request.form.get("booking_url") or "").strip() or None,
             )
             db.session.add(apartment)
             db.session.flush()
@@ -1347,6 +1616,7 @@ def manage_apartments():
             apartment.bedrooms = bedrooms
             apartment.rate = rate
             apartment.description = description or None
+            apartment.booking_url = (request.form.get("booking_url") or "").strip() or None
             db.session.commit()
             flash(f"Appartement « {name} » mis à jour.")
             return redirect("/manage_apartments")
@@ -1415,39 +1685,13 @@ def availability():
         request.args.get("month")
     )
 
-    rates_year = month_start.year
-    year_param = request.args.get("year")
-    if year_param and year_param.isdigit():
-        rates_year = int(year_param)
-
-    month_names = MONTHS.get(get_locale(), MONTHS[DEFAULT_LANG])
-
     calendars = []
     for apartment in apartments:
         maps = build_apartment_calendar_maps(apartment, month_start)
-        monthly_rates = load_apartment_monthly_rates(apartment.id, rates_year)
-        month_rates = (
-            monthly_rates
-            if rates_year == month_start.year
-            else load_apartment_monthly_rates(apartment.id, month_start.year)
+        season_rates = load_apartment_season_rates(apartment.id)
+        effective_rate, rate_source = get_apartment_rate_for_month(
+            apartment, month_start.year, month_start.month, season_rates
         )
-        effective_rate, is_monthly_override = get_apartment_rate_for_month(
-            apartment, month_start.year, month_start.month, month_rates
-        )
-        year_rates = []
-        for m in range(1, 13):
-            rate, is_override = get_apartment_rate_for_month(
-                apartment, rates_year, m, monthly_rates
-            )
-            year_rates.append(
-                {
-                    "month": m,
-                    "name": month_names[m - 1].capitalize(),
-                    "rate": rate,
-                    "is_override": is_override,
-                    "override_rate": rate if is_override else "",
-                }
-            )
         calendars.append(
             {
                 "apartment": apartment,
@@ -1462,8 +1706,8 @@ def availability():
                     reverse=True,
                 ),
                 "effective_rate": effective_rate,
-                "is_monthly_override": is_monthly_override,
-                "year_rates": year_rates,
+                "rate_source": rate_source,
+                "season_rates": season_rates,
             }
         )
 
@@ -1478,9 +1722,6 @@ def availability():
         current_month=month_start.month,
         current_year=month_start.year,
         current_month_query=month_start.strftime("%Y-%m"),
-        rates_year=rates_year,
-        prev_rates_year=rates_year - 1,
-        next_rates_year=rates_year + 1,
     )
 
 
@@ -1489,10 +1730,7 @@ def availability():
 def apartment_rates():
     ensure_cms_defaults()
     return_month = request.form.get("return_month") or datetime.now().strftime("%Y-%m")
-    rates_year = request.form.get("rates_year")
     redirect_url = f"/availability?month={return_month}"
-    if rates_year and str(rates_year).isdigit():
-        redirect_url += f"&year={rates_year}"
 
     apartment_id = request.form.get("apartment_id")
     apartment = Apartment.query.filter_by(id=apartment_id).first()
@@ -1516,97 +1754,51 @@ def apartment_rates():
         flash(f"Tarif par défaut mis à jour pour « {apartment.name} ».")
         return redirect(f"{redirect_url}#apt-{apartment.id}")
 
-    if action == "update_year_rates":
+    if action == "add_season_rate":
+        start = _parse_admin_date(request.form.get("season_start"))
+        end = _parse_admin_date(request.form.get("season_end"))
+        label = (request.form.get("season_label") or "").strip() or None
         try:
-            year = int(request.form.get("year"))
+            rate = int(request.form.get("season_rate"))
         except (TypeError, ValueError):
-            flash("Année invalide.")
+            flash("Tarif saisonnier invalide.")
             return redirect(f"{redirect_url}#apt-{apartment.id}")
-
-        updated = 0
-        cleared = 0
-        for m in range(1, 13):
-            raw = (request.form.get(f"rate_{m}") or "").strip()
-            override = ApartmentMonthlyRate.query.filter_by(
-                apartment_id=apartment.id, year=year, month=m
-            ).first()
-            if raw == "":
-                if override:
-                    db.session.delete(override)
-                    cleared += 1
-                continue
-            try:
-                rate = int(raw)
-            except ValueError:
-                flash(f"Tarif invalide pour le mois {m}.")
-                return redirect(f"{redirect_url}#apt-{apartment.id}")
-            if rate < 0:
-                flash(f"Tarif négatif pour le mois {m}.")
-                return redirect(f"{redirect_url}#apt-{apartment.id}")
-            if override:
-                override.rate = rate
-            else:
-                db.session.add(
-                    ApartmentMonthlyRate(
-                        apartment_id=apartment.id,
-                        year=year,
-                        month=m,
-                        rate=rate,
-                    )
-                )
-            updated += 1
-
-        db.session.commit()
-        flash(
-            f"Tarifs {year} enregistrés pour « {apartment.name} » "
-            f"({updated} mois définis, {cleared} remis au défaut)."
-        )
-        return redirect(f"{redirect_url}#apt-{apartment.id}")
-
-    if action == "update_monthly_rate":
-        try:
-            year = int(request.form.get("year"))
-            month = int(request.form.get("month"))
-            rate = int(request.form.get("monthly_rate"))
-        except (TypeError, ValueError):
-            flash("Tarif mensuel invalide.")
+        if not start or not end:
+            flash("Dates invalides. Utilisez le format jj-mm-aaaa.")
             return redirect(f"{redirect_url}#apt-{apartment.id}")
-        if month < 1 or month > 12 or rate < 0:
-            flash("Vérifiez le mois et le tarif.")
+        if end < start:
+            flash("La date de fin doit être après la date de début.")
             return redirect(f"{redirect_url}#apt-{apartment.id}")
-
-        override = ApartmentMonthlyRate.query.filter_by(
-            apartment_id=apartment.id, year=year, month=month
-        ).first()
-        if override:
-            override.rate = rate
-        else:
-            db.session.add(
-                ApartmentMonthlyRate(
-                    apartment_id=apartment.id,
-                    year=year,
-                    month=month,
-                    rate=rate,
-                )
+        if rate < 0:
+            flash("Le tarif ne peut pas être négatif.")
+            return redirect(f"{redirect_url}#apt-{apartment.id}")
+        db.session.add(
+            ApartmentSeasonRate(
+                apartment_id=apartment.id,
+                start_date=start,
+                end_date=end,
+                rate=rate,
+                label=label,
             )
+        )
         db.session.commit()
-        flash(f"Tarif de {month:02d}/{year} mis à jour pour « {apartment.name} ».")
+        period = f"{start.strftime('%d/%m/%Y')} → {end.strftime('%d/%m/%Y')}"
+        flash(f"Période saisonnière enregistrée pour « {apartment.name} » ({period}, {rate} €/nuit).")
         return redirect(f"{redirect_url}#apt-{apartment.id}")
 
-    if action == "clear_monthly_rate":
+    if action == "delete_season_rate":
         try:
-            year = int(request.form.get("year"))
-            month = int(request.form.get("month"))
+            season_id = int(request.form.get("season_id"))
         except (TypeError, ValueError):
-            flash("Mois invalide.")
+            flash("Période introuvable.")
             return redirect(f"{redirect_url}#apt-{apartment.id}")
-        override = ApartmentMonthlyRate.query.filter_by(
-            apartment_id=apartment.id, year=year, month=month
+        season = ApartmentSeasonRate.query.filter_by(
+            id=season_id, apartment_id=apartment.id
         ).first()
-        if override:
-            db.session.delete(override)
+        if season:
+            db.session.delete(season)
             db.session.commit()
-            flash(f"Tarif mensuel retiré — retour au tarif par défaut pour « {apartment.name} ».")
+            flash(f"Période saisonnière supprimée pour « {apartment.name} ».")
         return redirect(f"{redirect_url}#apt-{apartment.id}")
 
     return redirect(redirect_url)

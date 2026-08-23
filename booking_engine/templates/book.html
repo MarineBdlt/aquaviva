@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% set active_page = "book" %}
+
+{% block title %}{{ _('book.title') }}{% endblock %}
+{% block meta_robots %}noindex,follow{% endblock %}
+{% block og_title %}{{ _('book.title') }} — La Casa Rosa{% endblock %}
+{% block canonical %}{{ url_for('book_online', _external=True) }}{% endblock %}
+
+{% block main %}
+<div class="container text-start" style="max-width: 640px;">
+    <h1 class="av-hero-title h2 mb-2">{{ _('book.title') }}</h1>
+    <p class="text-muted mb-4">{{ _('book.intro') }}</p>
+
+    {% if site_phone %}
+    <p class="mb-4">
+        <a class="btn btn-outline-secondary" href="tel:{{ site_phone_tel }}">
+            {{ _('book.call') }} — {{ site_phone }}
+        </a>
+    </p>
+    {% endif %}
+
+    <form class="card p-3 shadow-sm" action="{{ url_for('book_online') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="mb-3">
+            <label class="form-label" for="book_name">{{ _('book.name') }}</label>
+            <input class="form-control" id="book_name" name="name" required maxlength="100" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="book_email">{{ _('book.email') }}</label>
+            <input class="form-control" id="book_email" type="email" name="email" required maxlength="120" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="book_phone">{{ _('book.phone') }}</label>
+            <input class="form-control" id="book_phone" type="tel" name="phone" maxlength="50" />
+        </div>
+        {% if apartments %}
+        <div class="mb-3">
+            <label class="form-label" for="book_apartment">{{ _('book.apartment') }}</label>
+            <select class="form-select" id="book_apartment" name="apartment_id">
+                <option value="">{{ _('book.apartment_any') }}</option>
+                {% for apt in apartments %}
+                <option value="{{ apt.id }}" {% if preselect and preselect|string == apt.id|string %}selected{% endif %}>
+                    {{ apt.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        {% endif %}
+        <div class="row g-2 mb-3">
+            <div class="col-md-6">
+                <label class="form-label" for="book_in">{{ _('book.check_in') }}</label>
+                <input class="form-control" id="book_in" type="date" name="check_in" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label" for="book_out">{{ _('book.check_out') }}</label>
+                <input class="form-control" id="book_out" type="date" name="check_out" />
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label" for="book_message">{{ _('book.message') }}</label>
+            <textarea class="form-control" id="book_message" name="message" rows="4" required maxlength="2000"></textarea>
+        </div>
+        <button class="btn btn-warning" type="submit">{{ _('book.submit') }}</button>
+    </form>
+</div>
+{% endblock %}

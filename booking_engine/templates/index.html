@@ -3,8 +3,8 @@
 {% set active_page = "home" %}
 
 {% block title %}{{ _('title.home') }}{% if preview_mode %}{{ _('preview.suffix') }}{% endif %}{% endblock %}
-{% block meta_description %}{{ home_content.body|striptags|truncate(155, True, '…') }}{% endblock %}
-{% block og_title %}{{ home_content.title }} | Villa Aqua Viva{% endblock %}
+{% block meta_description %}{{ _('meta.default_description') }}{% endblock %}
+{% block og_title %}{{ _('meta.default_og_title') }}{% endblock %}
 {% block canonical %}{{ url_for('index', _external=True) }}{% endblock %}
 {% block meta_robots %}{{ 'noindex,nofollow' if preview_mode else 'index,follow' }}{% endblock %}
 
@@ -26,7 +26,7 @@
         <div class="carousel-inner rounded">
             {% for image in hero_images %}
             <div class="carousel-item {{ 'active' if loop.first else '' }}">
-                <img src="/static/{{ image.image_file }}" class="d-block w-100 home-hero-image" alt="{{ image.caption or ('Villa Aqua Viva — photo ' ~ loop.index) }}">
+                <img src="/static/{{ image.image_file }}" class="d-block w-100 home-hero-image" alt="{{ image.caption or ('La Casa Rosa — photo ' ~ loop.index) }}">
             </div>
             {% endfor %}
         </div>
@@ -43,8 +43,16 @@
 </div>
 
 <div class="container home-intro text-center mb-2">
+    <p class="av-brand-mark mb-1">{{ _('brand.name') }}</p>
+    <p class="av-brand-tagline mb-3">{{ _('brand.tagline') }}</p>
     <h1 class="mb-2 av-hero-title">{{ home_content.title }}</h1>
-    <p class="lead mb-0">{{ home_content.body }}</p>
+    <p class="lead mb-3">{{ home_content.body }}</p>
+    <p class="mb-0">
+        <a class="btn btn-warning av-book-cta px-4" href="{{ url_for('book_online') }}">
+            {{ _('cta.book_online') }}
+        </a>
+    </p>
+    <p class="small text-muted mt-2 mb-0">{{ _('cta.book_hint') }}</p>
 </div>
 
 <style>
@@ -84,14 +92,14 @@
         <div class="row g-4">
             {% for apartment in apartments %}
             <div class="col-md-6 col-lg-4">
-                <a href="{{ url_for('apartments_public') }}#apt-{{ apartment.id }}" class="text-decoration-none text-dark">
-                    <article class="card h-100 shadow-sm home-apartment-card">
+                <article class="card h-100 shadow-sm home-apartment-card">
+                    <a href="{{ url_for('apartments_public') }}#apt-{{ apartment.id }}" class="text-decoration-none text-dark">
                         {% if apartment.images %}
-                        <img src="/static/{{ apartment.images[0].image_file }}" class="card-img-top" alt="{{ apartment.name }} — Villa Aqua Viva Calcatoggio" style="height: 220px; object-fit: cover;" />
+                        <img src="/static/{{ apartment.images[0].image_file }}" class="card-img-top" alt="{{ apartment.name }} — La Casa Rosa, Calcatoggio" style="height: 220px; object-fit: cover;" />
                         {% else %}
                         <img src="{{ url_for('static', filename='uploads/stock_room_image.jpeg') }}" class="card-img-top" alt="{{ apartment.name }}" style="height: 220px; object-fit: cover;" />
                         {% endif %}
-                        <div class="card-body">
+                        <div class="card-body pb-2">
                             <h3 class="h5 mb-2 d-flex align-items-center gap-2">
                                 {{ pencil_icon('home', 28) }}
                                 <span>{{ apartment.name }}</span>
@@ -109,17 +117,25 @@
                                 {{ _('home.see_calendar') }}
                             </span>
                         </div>
-                    </article>
-                </a>
+                    </a>
+                    {% if apartment.booking_url %}
+                    <div class="card-body pt-0">
+                        <a class="btn btn-sm btn-outline-secondary"
+                           href="{{ apartment.booking_url }}"
+                           target="_blank"
+                           rel="noopener noreferrer">{{ _('cta.book_airbnb') }}</a>
+                    </div>
+                    {% endif %}
+                </article>
             </div>
             {% endfor %}
         </div>
         {% else %}
         <p class="text-muted">{{ _('home.no_apartments') }}</p>
         {% endif %}
-        <p class="mt-3 mb-0">
-            <a href="{{ url_for('apartments_public') }}" class="av-inline-link">{{ _('nav.apartments') }} →</a>
-            · <a href="{{ url_for('prices') }}" class="av-inline-link">{{ _('nav.prices') }} →</a>
+        <p class="mt-3 mb-0 av-btn-row">
+            <a href="{{ url_for('apartments_public') }}" class="btn btn-outline-secondary btn-sm">{{ _('nav.apartments') }}</a>
+            <a class="btn btn-warning btn-sm av-book-cta" href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a>
         </p>
     </section>
 
@@ -147,9 +163,9 @@
                     </li>
                     {% endfor %}
                 </ul>
-                <p class="mt-3 small">
-                    <a class="av-inline-link" href="{{ villa.map_link }}" target="_blank" rel="noopener noreferrer">{{ _('footer.map') }} →</a>
-                    · <a class="av-inline-link" href="https://www.google.com/maps/search/?api=1&query=Calcatoggio+Corse" target="_blank" rel="noopener noreferrer">Google Maps →</a>
+                <p class="av-btn-row mt-3 small">
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ villa.map_link }}" target="_blank" rel="noopener noreferrer">{{ _('footer.map') }}</a>
+                    <a class="btn btn-outline-secondary btn-sm" href="https://www.google.com/maps/search/?api=1&query=Calcatoggio+Corse" target="_blank" rel="noopener noreferrer">Google Maps</a>
                 </p>
             </div>
             <div class="col-lg-7">
@@ -173,17 +189,17 @@
             </div>
             {% endif %}
             <div class="{% if about_image_path %}col-md-7{% else %}col-12{% endif %}">
-                <div class="home-about-preview lead text-dark">
+                <div class="home-about-preview lead text-dark av-prose">
                     {% set about_paras = about_content.body.split('\n\n') %}
                     {% for paragraph in about_paras[:2] %}
                     {% if paragraph.strip() %}
                     <p>{{ paragraph.strip() }}</p>
                     {% endif %}
                     {% endfor %}
-                    <p class="mb-0">
-                        <a href="{{ url_for('about') }}" class="av-inline-link">{{ _('home.read_more') }}</a>
-                        · <a href="#livre-dor" class="av-inline-link">{{ _('nav.guestbook') }} →</a>
-                        · <a href="{{ site_whatsapp_url }}" class="av-inline-link" target="_blank" rel="noopener noreferrer">WhatsApp →</a>
+                    <p class="av-btn-row mt-3 mb-0">
+                        <a href="{{ url_for('about') }}" class="btn btn-outline-secondary btn-sm">{{ _('home.read_more') }}</a>
+                        <a href="#livre-dor" class="btn btn-outline-secondary btn-sm">{{ _('nav.guestbook') }}</a>
+                        <a href="{{ site_whatsapp_url }}" class="btn btn-warning btn-sm" target="_blank" rel="noopener noreferrer">WhatsApp</a>
                     </p>
                 </div>
             </div>
@@ -197,15 +213,30 @@
         <p class="text-muted mb-4">{{ villa.good_spots.intro }}</p>
         <div class="row g-3">
             {% for spot in villa.good_spots.list %}
-            <div class="col-md-6">
-                <article class="good-spot-item h-100 py-3 px-3">
-                    <div class="pencil-spot-icon">{{ pencil_icon(spot.icon, 42) }}</div>
-                    <div class="d-flex justify-content-between align-items-baseline gap-2 mb-1">
-                        <h3 class="h5 mb-0">{{ spot.name }}</h3>
-                        <span class="text-warning small text-nowrap fw-semibold">{{ spot.rating }}</span>
+            <div class="col-md-6 col-lg-4">
+                <article class="good-spot-card">
+                    {% if spot.image %}
+                    <img src="{{ spot.image }}" alt="{{ spot.name }}" loading="lazy" referrerpolicy="no-referrer" />
+                    {% endif %}
+                    <div class="good-spot-body">
+                        <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
+                            <h3 class="h5 mb-0 d-flex align-items-center gap-2">
+                                {{ pencil_icon(spot.icon, 28) }}
+                                <span>{{ spot.name }}</span>
+                            </h3>
+                            {% if spot.rating %}
+                            <span class="text-warning small text-nowrap fw-semibold">{{ spot.rating }}</span>
+                            {% endif %}
+                        </div>
+                        <p class="small text-muted mb-2">{{ spot.kind }}</p>
+                        <p class="mb-3 flex-grow-1">{{ spot.detail }}</p>
+                        {% if spot.url %}
+                        <a class="btn btn-warning btn-sm align-self-start"
+                           href="{{ spot.url }}"
+                           target="_blank"
+                           rel="noopener noreferrer">{{ _('spot.visit') }}</a>
+                        {% endif %}
                     </div>
-                    <p class="small text-muted mb-2">{{ spot.kind }}</p>
-                    <p class="mb-0">{{ spot.detail }}</p>
                 </article>
             </div>
             {% endfor %}
@@ -279,18 +310,21 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "LodgingBusiness",
-  "name": "Villa Aqua Viva — Acqua Linda d'Orcino",
-  "alternateName": "Acqua Linda d'Orcino",
-  "description": {{ home_content.body|tojson }},
+  "@type": ["LodgingBusiness", "VacationRental"],
+  "name": "La Casa Rosa",
+  "alternateName": ["Acqua Linda d'Orcino", "La Casa Rosa Calcatoggio"],
+  "description": {{ _('meta.default_description')|tojson }},
   "url": {{ url_for('index', _external=True)|tojson }},
   "telephone": {{ site_phone|tojson }},
   "email": {{ site_email|tojson }},
   "image": {{ url_for('static', filename=site_logo_path, _external=True)|tojson }},
+  "keywords": {{ _('meta.keywords')|tojson }},
+  "knowsAbout": {{ _('seo.knows_about')|tojson }},
   "address": {
     "@type": "PostalAddress",
     "addressLocality": "Calcatoggio",
     "addressRegion": "Corse-du-Sud",
+    "postalCode": "20111",
     "addressCountry": "FR"
   },
   "geo": {
@@ -298,10 +332,22 @@
     "latitude": 42.027,
     "longitude": 8.768
   },
+  "areaServed": [
+    {"@type": "Place", "name": "Calcatoggio"},
+    {"@type": "Place", "name": "Corse-du-Sud"},
+    {"@type": "Place", "name": "Corse"},
+    {"@type": "Place", "name": "Ajaccio"}
+  ],
   "amenityFeature": [
     {"@type": "LocationFeatureSpecification", "name": {{ _('seo.amenity_sea_view')|tojson }}},
-    {"@type": "LocationFeatureSpecification", "name": {{ _('seo.amenity_beach')|tojson }}}
+    {"@type": "LocationFeatureSpecification", "name": {{ _('seo.amenity_beach')|tojson }}},
+    {"@type": "LocationFeatureSpecification", "name": {{ _('seo.amenity_terrace')|tojson }}},
+    {"@type": "LocationFeatureSpecification", "name": {{ _('seo.amenity_parking')|tojson }}},
+    {"@type": "LocationFeatureSpecification", "name": {{ _('seo.amenity_quiet')|tojson }}}
   ],
+  "priceRange": "€€",
+  "currenciesAccepted": "EUR",
+  "availableLanguage": ["French", "English", "Portuguese", "Italian"],
   "sameAs": [
     "https://www.abritel.fr/location-vacances/p2662308",
     {{ site_whatsapp_url|tojson }}
@@ -319,9 +365,36 @@
 {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  "name": "Villa Aqua Viva",
+  "name": "La Casa Rosa",
+  "alternateName": {{ _('meta.default_og_title')|tojson }},
   "url": {{ url_for('index', _external=True)|tojson }},
-  "inLanguage": {{ ['fr','en','pt','it']|tojson }}
+  "inLanguage": ["fr", "en", "pt", "it"]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": {{ _('nav.home')|tojson }},
+      "item": {{ url_for('index', _external=True)|tojson }}
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": {{ _('nav.apartments')|tojson }},
+      "item": {{ url_for('apartments_public', _external=True)|tojson }}
+    },
+    {
+      "@type": "ListItem",
+      "position": 3,
+      "name": {{ _('nav.about')|tojson }},
+      "item": {{ url_for('about', _external=True)|tojson }}
+    }
+  ]
 }
 </script>
 {% endblock %}

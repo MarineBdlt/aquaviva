@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block meta_description %}{{ _('meta.apartments_description') }}{% endblock %}
-{% block og_title %}{{ _('title.apartments') }} — Villa Aqua Viva{% endblock %}
+{% block og_title %}{{ _('title.apartments') }} — La Casa Rosa{% endblock %}
 {% block canonical %}{{ url_for('apartments_public', _external=True) }}{% endblock %}
 
 {% block main %}
@@ -70,13 +70,22 @@
                                 <strong>{{ apartment.bedrooms }}</strong>
                                 {% if apartment.bedrooms > 1 %}{{ _('home.bedrooms') }}{% else %}{{ _('home.bedroom') }}{% endif %}
                                 · <strong>{{ cal.effective_rate }} €</strong> {{ _('home.per_night') }}
-                                {% if cal.is_monthly_override %}
-                                <span class="badge bg-warning text-dark">{{ month_label }}</span>
+                                {% if cal.rate_source == 'season' %}
+                                <span class="badge bg-warning text-dark">Saison</span>
                                 {% endif %}
                             </p>
                             {% if apartment.description %}
                             <p class="card-text">{{ apartment.description }}</p>
                             {% endif %}
+                            <div class="av-btn-row mb-3">
+                                <a class="btn btn-warning btn-sm" href="{{ url_for('book_online', apartment_id=apartment.id) }}">{{ _('cta.book_online') }}</a>
+                                {% if apartment.booking_url %}
+                                <a class="btn btn-outline-secondary btn-sm"
+                                   href="{{ apartment.booking_url }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer">{{ _('cta.book_airbnb') }}</a>
+                                {% endif %}
+                            </div>
 
                             <h5 class="mt-3 mb-2 d-flex align-items-center gap-2">
                                 {{ pencil_icon('home', 28) }}
@@ -153,10 +162,10 @@
     {% else %}
     <p class="text-muted">{{ _('apt.none') }}</p>
     {% endif %}
-    <p class="mt-4 mb-0">
-        <a class="av-inline-link" href="{{ url_for('index') }}#appartements">{{ _('nav.home') }} →</a>
-        · <a class="av-inline-link" href="{{ url_for('prices') }}">{{ _('nav.prices') }} →</a>
-        · <a class="av-inline-link" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp →</a>
+    <p class="av-btn-row mt-4 mb-0">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('index') }}#appartements">{{ _('nav.home') }}</a>
+        <a class="btn btn-warning btn-sm" href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp</a>
     </p>
 </div>
 {% endblock %}

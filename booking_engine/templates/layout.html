@@ -5,8 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="{% block meta_description %}{{ _('meta.default_description') }}{% endblock %}">
-    <meta name="robots" content="{% block meta_robots %}index,follow{% endblock %}">
-    <meta name="theme-color" content="#1e4f5a">
+    <meta name="keywords" content="{% block meta_keywords %}{{ _('meta.keywords') }}{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}index,follow,max-image-preview:large,max-snippet:-1{% endblock %}">
+    <meta name="author" content="La Casa Rosa — Calcatoggio">
+    <meta name="geo.region" content="FR-2A">
+    <meta name="geo.placename" content="Calcatoggio, Corse">
+    <meta name="geo.position" content="42.027;8.768">
+    <meta name="ICBM" content="42.027, 8.768">
+    <meta name="theme-color" content="#fff5f7">
     <link rel="canonical" href="{% block canonical %}{{ request.url }}{% endblock %}">
     {% for code in supported_langs %}
     <link rel="alternate" hreflang="{{ code }}" href="{{ request.base_url }}?lang={{ code }}">
@@ -15,15 +21,20 @@
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="{{ {'fr':'fr_FR','en':'en_GB','pt':'pt_BR','it':'it_IT'}.get(current_lang, 'fr_FR') }}">
-    <meta property="og:site_name" content="Villa Aqua Viva">
+    {% for code, loc in {'fr':'fr_FR','en':'en_GB','pt':'pt_BR','it':'it_IT'}.items() if code != current_lang %}
+    <meta property="og:locale:alternate" content="{{ loc }}">
+    {% endfor %}
+    <meta property="og:site_name" content="{{ _('meta.default_og_title') }}">
     <meta property="og:title" content="{% block og_title %}{{ _('meta.default_og_title') }}{% endblock %}">
     <meta property="og:description" content="{% block og_description %}{{ self.meta_description() }}{% endblock %}">
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:image" content="{{ url_for('static', filename=site_logo_path, _external=True) }}">
+    <meta property="og:image:alt" content="{{ _('logo.alt') }}">
 
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="{{ self.og_title() }}">
     <meta name="twitter:description" content="{{ self.meta_description() }}">
+    <meta name="twitter:image" content="{{ url_for('static', filename=site_logo_path, _external=True) }}">
 
     <link crossorigin="anonymous" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" rel="stylesheet">
     <script crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p"></script>
@@ -34,7 +45,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="/static/styles.css?v=footer4" rel="stylesheet">
+    <link href="/static/styles.css?v=book6" rel="stylesheet">
 
     <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js" integrity="sha512-LsnSViqQyaXpD4mBBdRYeP6sRwJiJveh2ZIbW41EBrNmKxgr/LFZIiWT6yr+nycvhvauz8c2nYMhrP80YhG7Cw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -46,7 +57,7 @@
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
     <script src="/static/hotel.js" type="text/javascript" defer></script>
 
-    <title>{% block title %}{{ _('title.home') }}{% endblock %} | Villa Aqua Viva — Calcatoggio</title>
+    <title>{% block title %}{{ _('title.home') }}{% endblock %} | {{ _('meta.title_suffix') }}</title>
     {% block structured_data %}{% endblock %}
 </head>
 
@@ -80,9 +91,9 @@
             <nav class="navbar navbar-expand-lg av-navbar shadow-sm border-bottom" aria-label="{{ _('aria.main_nav') }}">
                 <div class="container">
                     <a class="navbar-brand site-logo-link" href="{{ url_for('index') }}">
-                        <span class="site-logo-circle">
-                            <img src="/static/{{ site_logo_path }}" class="site-logo-img" alt="{{ _('logo.alt') }}">
-                        </span>
+                        <figure class="postcard-frame postcard-frame--logo mb-0">
+                            <img src="/static/{{ site_logo_path }}" class="site-logo-img" width="120" height="80" alt="{{ _('logo.alt') }}">
+                        </figure>
                     </a>
                     <button class="navbar-toggler av-menu-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="{{ _('menu.open') }}">
                         <span class="av-menu-toggler-inner">
@@ -93,15 +104,18 @@
                     <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
                         {% if session.get("admin_id") %}
                         <ul class="navbar-nav ms-auto align-items-lg-center">
-                            <li class="nav-item {{'active' if active_page == 'apartments'}}"><a class="nav-link" href="/manage_apartments">{{ _('nav.apartments') }}</a></li>
-                            <li class="nav-item {{'active' if active_page == 'cms'}}"><a class="nav-link" href="{{ url_for('cms') }}">{{ _('nav.cms') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-intro">Intro</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-localisation">{{ _('home.shortcut_location') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-about">{{ _('nav.about') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-spots">{{ _('home.shortcut_spots') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms') }}#section-guestbook">{{ _('nav.guestbook') }}</a></li>
-                            <li class="nav-item {{'active' if active_page == 'availability'}}"><a class="nav-link" href="/availability">{{ _('nav.availability') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('cms_preview_home') }}" target="_blank" rel="noopener">{{ _('nav.preview') }}</a></li>
+                            <li class="nav-item {{'active' if active_page == 'apartments'}}">
+                                <a class="nav-link" href="{{ url_for('manage_apartments') }}">{{ _('nav.admin_apartments') }}</a>
+                            </li>
+                            <li class="nav-item {{'active' if active_page == 'availability'}}">
+                                <a class="nav-link" href="{{ url_for('availability') }}">{{ _('nav.availability') }}</a>
+                            </li>
+                            <li class="nav-item {{'active' if active_page == 'cms'}}">
+                                <a class="nav-link" href="{{ url_for('cms') }}">{{ _('nav.cms') }}</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('cms_preview_home') }}" target="_blank" rel="noopener">{{ _('nav.preview') }}</a>
+                            </li>
                             <li class="nav-item"><a class="nav-link" href="/logout">{{ _('nav.logout') }}</a></li>
                         </ul>
                         {% else %}
@@ -112,8 +126,10 @@
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#qui-sommes-nous">{{ _('nav.about') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('prices') }}">{{ _('nav.prices') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }}</a></li>
+                            <li class="nav-item">
+                                <a class="nav-link av-nav-book" href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a>
+                            </li>
                             <li class="nav-item mx-lg-2"><a class="nav-link" href="/admin_login">{{ _('nav.login') }}</a></li>
                         </ul>
                         {% endif %}
@@ -148,13 +164,13 @@
                         <li><a href="{{ url_for('index') }}#qui-sommes-nous">{{ _('nav.about') }}</a></li>
                         <li><a href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
                         <li><a href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
-                        <li><a href="{{ url_for('prices') }}">{{ _('nav.prices') }}</a></li>
                     </ul>
                 </div>
                 <div class="col-md-4">
                     <h2 class="h6 av-accent-text mb-3">{{ _('footer.useful') }}</h2>
                     <ul class="list-unstyled av-footer-links mb-0">
                         <li><a href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">WhatsApp</a></li>
+                        <li><a href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a></li>
                         <li><a href="mailto:{{ site_email }}">{{ site_email }}</a></li>
                         <li><a href="https://www.abritel.fr/location-vacances/p2662308" target="_blank" rel="noopener noreferrer">{{ _('footer.abritel') }}</a></li>
                         <li><a href="https://www.openstreetmap.org/?mlat=42.027&mlon=8.768#map=14/42.027/8.768" target="_blank" rel="noopener noreferrer">{{ _('footer.map') }}</a></li>
@@ -162,7 +178,8 @@
                     </ul>
                 </div>
                 <div class="col-md-4">
-                    <h2 class="h6 av-accent-text mb-3">Villa Aqua Viva</h2>
+                    <h2 class="h6 av-accent-text mb-3">{{ _('brand.name') }}</h2>
+                    <p class="av-footer-text small mb-2">{{ _('brand.tagline') }}</p>
                     <p class="av-footer-text small mb-2">{{ _('footer.place') }}</p>
                     <p class="av-footer-text small mb-0">{{ _('footer.developed') }} <strong class="av-accent-text">Marine Bap</strong></p>
                 </div>

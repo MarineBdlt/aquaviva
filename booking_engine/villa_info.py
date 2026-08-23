@@ -1,4 +1,4 @@
-"""Villa Aqua Viva — shared location & amenities (Calcatoggio, Corse)."""
+"""La Casa Rosa — shared location & amenities (Calcatoggio, Corse)."""
 
 import copy
 import json
@@ -115,169 +115,317 @@ NEARBY = {
     },
 }
 
-# Highly rated local spots (Google / review aggregators)
+# Highly rated local spots (activities + food) — with optional image & link
 GOOD_SPOTS = {
     "fr": {
         "title": "Bonnes adresses",
-        "intro": "Nos suggestions près de la villa, parmi les mieux notées autour de Calcatoggio.",
+        "intro": "Plongée, nature, balades et tables — nos coups de cœur autour de La Casa Rosa.",
         "list": [
+            {
+                "icon": "dive",
+                "name": "Nautica Plongée",
+                "kind": "Centre de plongée · Orcino",
+                "rating": "★ 4,9",
+                "detail": "Baptêmes et explorations sous-marines depuis la plage d’Orcino.",
+                "url": "https://www.nauticaplongee.com/",
+                "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Calanques de Piana",
+                "kind": "Site UNESCO · nature",
+                "rating": "★ 4,9",
+                "detail": "Falaises de granite rose classées — excursion mythique à ~1 h de route.",
+                "url": "https://www.visit-corsica.com/fr/decouvrir/sites-naturels/les-calanche-de-piana",
+                "image": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "paraglide",
+                "name": "Corsic Adventure",
+                "kind": "Parapente · Liscia",
+                "rating": "★ 4,8",
+                "detail": "Vols biplace mer & montagne au-dessus de la plage de la Liscia.",
+                "url": "https://www.corsic-adventure.com/",
+                "image": "https://images.unsplash.com/photo-1473862170180-84427c485aca?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Tour génoise d’Ancône",
+                "kind": "Patrimoine · balade",
+                "rating": "★ 4,7",
+                "detail": "Promenade d’environ 18 min jusqu’à la tour, vue mer spectaculaire.",
+                "url": "https://www.openstreetmap.org/?mlat=42.03&mlon=8.76#map=15/42.03/8.76",
+                "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+            },
             {
                 "icon": "pizza",
                 "name": "U Fornu",
                 "kind": "Pizzeria · village",
                 "rating": "★ 4,8",
-                "detail": "Pizzas au feu de bois, produits corses maison, vue sur la baie de la Liscia.",
+                "detail": "Pizzas au feu de bois, produits corses, vue sur la baie de la Liscia.",
+                "url": "https://www.google.com/maps/search/?api=1&query=U+Fornu+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "auberge",
                 "name": "Auberge d’Ancône",
                 "kind": "Cuisine corse",
                 "rating": "★ 4,8",
-                "detail": "Plats traditionnels faits maison, terrasse vue mer près de la Tour d’Ancône.",
+                "detail": "Plats traditionnels faits maison, terrasse vue mer près de la tour.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Auberge+d%27Ancone+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "foodtruck",
                 "name": "Orcino Food Truck",
                 "kind": "Burgers & pizza · plage",
                 "rating": "★ 4,8",
-                "detail": "Spot décontracté sur la plage d’Orcino, idéal pour un coucher de soleil.",
+                "detail": "Spot décontracté sur la plage d’Orcino, idéal au coucher du soleil.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Orcino+Food+Truck+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "seaside",
                 "name": "Les Tamaris",
                 "kind": "Italien · bord de mer",
                 "rating": "★ 4,5",
-                "detail": "Restaurant de plage à Orcino, pizzas et cuisine italienne pieds dans le sable.",
-            },
-            {
-                "icon": "seaside",
-                "name": "Le Malibu",
-                "kind": "Méditerranéen · plage",
-                "rating": "★ 4,0",
-                "detail": "Cadre en bord de mer (Liscia / Stagnone), pratique pour déjeuner après la baignade.",
+                "detail": "Restaurant de plage à Orcino — pizzas et cuisine italienne pieds dans le sable.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Les+Tamaris+Orcino+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80",
             },
         ],
     },
     "en": {
         "title": "Good places nearby",
-        "intro": "Our tips near the villa — among the best-rated spots around Calcatoggio.",
+        "intro": "Diving, nature, walks and tables — our favourites around La Casa Rosa.",
         "list": [
+            {
+                "icon": "dive",
+                "name": "Nautica Plongée",
+                "kind": "Dive centre · Orcino",
+                "rating": "★ 4.9",
+                "detail": "Try dives and reef explorations from Orcino beach.",
+                "url": "https://www.nauticaplongee.com/",
+                "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Calanques de Piana",
+                "kind": "UNESCO · nature",
+                "rating": "★ 4.9",
+                "detail": "Pink granite cliffs — a legendary day trip about 1 hour away.",
+                "url": "https://www.visit-corsica.com/en/discover/natural-sites/the-calanche-of-piana",
+                "image": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "paraglide",
+                "name": "Corsic Adventure",
+                "kind": "Paragliding · Liscia",
+                "rating": "★ 4.8",
+                "detail": "Tandem flights over sea and mountains above Liscia beach.",
+                "url": "https://www.corsic-adventure.com/",
+                "image": "https://images.unsplash.com/photo-1473862170180-84427c485aca?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Genoese Tower of Ancône",
+                "kind": "Heritage · walk",
+                "rating": "★ 4.7",
+                "detail": "About an 18-minute walk to the tower and spectacular sea views.",
+                "url": "https://www.openstreetmap.org/?mlat=42.03&mlon=8.76#map=15/42.03/8.76",
+                "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+            },
             {
                 "icon": "pizza",
                 "name": "U Fornu",
                 "kind": "Pizzeria · village",
                 "rating": "★ 4.8",
-                "detail": "Wood-fired pizzas, homemade Corsican products, view over the Liscia bay.",
+                "detail": "Wood-fired pizzas, Corsican products, view over Liscia bay.",
+                "url": "https://www.google.com/maps/search/?api=1&query=U+Fornu+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "auberge",
                 "name": "Auberge d’Ancône",
                 "kind": "Corsican cuisine",
                 "rating": "★ 4.8",
-                "detail": "Homemade traditional dishes, sea-view terrace near the Tour d’Ancône.",
+                "detail": "Homemade traditional dishes, sea-view terrace near the tower.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Auberge+d%27Ancone+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "foodtruck",
                 "name": "Orcino Food Truck",
                 "kind": "Burgers & pizza · beach",
                 "rating": "★ 4.8",
-                "detail": "Casual spot on Orcino beach — perfect for a sunset meal.",
+                "detail": "Casual spot on Orcino beach — perfect at sunset.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Orcino+Food+Truck+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "seaside",
                 "name": "Les Tamaris",
                 "kind": "Italian · beachfront",
                 "rating": "★ 4.5",
-                "detail": "Beach restaurant at Orcino: pizzas and Italian food by the sand.",
-            },
-            {
-                "icon": "seaside",
-                "name": "Le Malibu",
-                "kind": "Mediterranean · beach",
-                "rating": "★ 4.0",
-                "detail": "Seaside setting (Liscia / Stagnone), handy for lunch after a swim.",
+                "detail": "Beach restaurant at Orcino — pizzas and Italian food by the sand.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Les+Tamaris+Orcino+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80",
             },
         ],
     },
     "pt": {
         "title": "Boas moradas",
-        "intro": "As nossas sugestões perto da villa, entre as melhor avaliadas em Calcatoggio.",
+        "intro": "Mergulho, natureza, passeios e mesas — os nossos favoritos perto de La Casa Rosa.",
         "list": [
+            {
+                "icon": "dive",
+                "name": "Nautica Plongée",
+                "kind": "Centro de mergulho · Orcino",
+                "rating": "★ 4,9",
+                "detail": "Batismos e explorações submarinas a partir da praia de Orcino.",
+                "url": "https://www.nauticaplongee.com/",
+                "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Calanques de Piana",
+                "kind": "Património UNESCO · natureza",
+                "rating": "★ 4,9",
+                "detail": "Falésias de granito rosa — passeio mítico a cerca de 1 h de carro.",
+                "url": "https://www.visit-corsica.com/fr/decouvrir/sites-naturels/les-calanche-de-piana",
+                "image": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "paraglide",
+                "name": "Corsic Adventure",
+                "kind": "Parapente · Liscia",
+                "rating": "★ 4,8",
+                "detail": "Voos tandem mar e montanha sobre a praia de Liscia.",
+                "url": "https://www.corsic-adventure.com/",
+                "image": "https://images.unsplash.com/photo-1473862170180-84427c485aca?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Torre genovesa d’Ancône",
+                "kind": "Património · passeio",
+                "rating": "★ 4,7",
+                "detail": "Cerca de 18 min a pé até à torre, vista mar espetacular.",
+                "url": "https://www.openstreetmap.org/?mlat=42.03&mlon=8.76#map=15/42.03/8.76",
+                "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+            },
             {
                 "icon": "pizza",
                 "name": "U Fornu",
                 "kind": "Pizzaria · aldeia",
                 "rating": "★ 4,8",
-                "detail": "Pizzas no forno a lenha, produtos corsos caseiros, vista sobre a baía de Liscia.",
+                "detail": "Pizzas no forno a lenha, produtos corsos, vista sobre a baía de Liscia.",
+                "url": "https://www.google.com/maps/search/?api=1&query=U+Fornu+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "auberge",
                 "name": "Auberge d’Ancône",
                 "kind": "Cozinha corsa",
                 "rating": "★ 4,8",
-                "detail": "Pratos tradicionais caseiros, terraço com vista para o mar junto à Tour d’Ancône.",
+                "detail": "Pratos tradicionais caseiros, terraço com vista para o mar.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Auberge+d%27Ancone+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "foodtruck",
                 "name": "Orcino Food Truck",
                 "kind": "Burgers e pizza · praia",
                 "rating": "★ 4,8",
-                "detail": "Spot descontraído na praia de Orcino, ideal para o pôr do sol.",
+                "detail": "Spot descontraído na praia de Orcino, ideal ao pôr do sol.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Orcino+Food+Truck+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "seaside",
                 "name": "Les Tamaris",
                 "kind": "Italiano · beira-mar",
                 "rating": "★ 4,5",
-                "detail": "Restaurante de praia em Orcino: pizzas e cozinha italiana na areia.",
-            },
-            {
-                "icon": "seaside",
-                "name": "Le Malibu",
-                "kind": "Mediterrâneo · praia",
-                "rating": "★ 4,0",
-                "detail": "Ambiente à beira-mar (Liscia / Stagnone), prático para almoçar após o banho.",
+                "detail": "Restaurante de praia em Orcino — pizzas e cozinha italiana na areia.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Les+Tamaris+Orcino+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80",
             },
         ],
     },
     "it": {
         "title": "Buoni indirizzi",
-        "intro": "I nostri consigli vicino alla villa, tra i posti meglio valutati a Calcatoggio.",
+        "intro": "Immersioni, natura, passeggiate e tavole — i nostri preferiti intorno a La Casa Rosa.",
         "list": [
+            {
+                "icon": "dive",
+                "name": "Nautica Plongée",
+                "kind": "Centro immersioni · Orcino",
+                "rating": "★ 4,9",
+                "detail": "Battesimi ed esplorazioni subacquee dalla spiaggia di Orcino.",
+                "url": "https://www.nauticaplongee.com/",
+                "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Calanche di Piana",
+                "kind": "UNESCO · natura",
+                "rating": "★ 4,9",
+                "detail": "Falesie di granito rosa — gita leggendaria a circa 1 h di auto.",
+                "url": "https://www.visit-corsica.com/it/scoprire/siti-naturali/le-calanche-di-piana",
+                "image": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "paraglide",
+                "name": "Corsic Adventure",
+                "kind": "Parapendio · Liscia",
+                "rating": "★ 4,8",
+                "detail": "Voli tandem mare e montagna sopra la spiaggia di Liscia.",
+                "url": "https://www.corsic-adventure.com/",
+                "image": "https://images.unsplash.com/photo-1473862170180-84427c485aca?auto=format&fit=crop&w=800&q=80",
+            },
+            {
+                "icon": "tower",
+                "name": "Torre genovese d’Ancône",
+                "kind": "Patrimonio · passeggiata",
+                "rating": "★ 4,7",
+                "detail": "Circa 18 min a piedi fino alla torre, vista mare spettacolare.",
+                "url": "https://www.openstreetmap.org/?mlat=42.03&mlon=8.76#map=15/42.03/8.76",
+                "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80",
+            },
             {
                 "icon": "pizza",
                 "name": "U Fornu",
                 "kind": "Pizzeria · paese",
                 "rating": "★ 4,8",
-                "detail": "Pizze al forno a legna, prodotti corsi fatti in casa, vista sulla baia di Liscia.",
+                "detail": "Pizze al forno a legna, prodotti corsi, vista sulla baia di Liscia.",
+                "url": "https://www.google.com/maps/search/?api=1&query=U+Fornu+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "auberge",
                 "name": "Auberge d’Ancône",
                 "kind": "Cucina corsa",
                 "rating": "★ 4,8",
-                "detail": "Piatti tradizionali fatti in casa, terrazza vista mare vicino alla Tour d’Ancône.",
+                "detail": "Piatti tradizionali fatti in casa, terrazza vista mare vicino alla torre.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Auberge+d%27Ancone+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "foodtruck",
                 "name": "Orcino Food Truck",
                 "kind": "Burger e pizza · spiaggia",
                 "rating": "★ 4,8",
-                "detail": "Posto informale sulla spiaggia di Orcino, ideale per il tramonto.",
+                "detail": "Posto informale sulla spiaggia di Orcino, ideale al tramonto.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Orcino+Food+Truck+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
             },
             {
                 "icon": "seaside",
                 "name": "Les Tamaris",
                 "kind": "Italiano · mare",
                 "rating": "★ 4,5",
-                "detail": "Ristorante sulla spiaggia di Orcino: pizze e cucina italiana sulla sabbia.",
-            },
-            {
-                "icon": "seaside",
-                "name": "Le Malibu",
-                "kind": "Mediterraneo · spiaggia",
-                "rating": "★ 4,0",
-                "detail": "Ambiente a mare (Liscia / Stagnone), comodo per pranzo dopo il bagno.",
+                "detail": "Ristorante sulla spiaggia di Orcino — pizze e cucina italiana sulla sabbia.",
+                "url": "https://www.google.com/maps/search/?api=1&query=Les+Tamaris+Orcino+Calcatoggio",
+                "image": "https://images.unsplash.com/photo-1473093295043-cdd812d0e601?auto=format&fit=crop&w=800&q=80",
             },
         ],
     },
@@ -448,7 +596,8 @@ def spots_list_to_text(spots):
     for item in spots.get("list", []):
         lines.append(
             f"{item.get('icon', 'seaside')}|{item.get('name', '')}|{item.get('kind', '')}|"
-            f"{item.get('rating', '')}|{item.get('detail', '')}"
+            f"{item.get('rating', '')}|{item.get('detail', '')}|"
+            f"{item.get('url', '')}|{item.get('image', '')}"
         )
     return "\n".join(lines)
 
@@ -461,15 +610,18 @@ def text_to_spots_list(text):
             continue
         parts = [p.strip() for p in line.split("|")]
         if len(parts) >= 5:
-            items.append(
-                {
-                    "icon": parts[0] or "seaside",
-                    "name": parts[1],
-                    "kind": parts[2],
-                    "rating": parts[3],
-                    "detail": parts[4],
-                }
-            )
+            item = {
+                "icon": parts[0] or "seaside",
+                "name": parts[1],
+                "kind": parts[2],
+                "rating": parts[3],
+                "detail": parts[4],
+            }
+            if len(parts) >= 6 and parts[5]:
+                item["url"] = parts[5]
+            if len(parts) >= 7 and parts[6]:
+                item["image"] = parts[6]
+            items.append(item)
         elif len(parts) == 4:
             items.append(
                 {

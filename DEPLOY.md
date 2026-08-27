@@ -38,6 +38,25 @@ Static files :
 ## 5. Reload
 Clique **Reload** → ouvre `https://USERNAME.pythonanywhere.com`
 
+## 6. E-mails du formulaire « Réserver » (`/reserver`)
+Sans SMTP configuré, le formulaire affiche une erreur et **aucun mail n’est envoyé**.
+
+Sur PythonAnywhere (ou en local), dans `~/aquaviva/.env` :
+
+```bash
+MAIL_USERNAME=anais.acquaviva@gmail.com
+MAIL_PASSWORD=xxxx xxxx xxxx xxxx
+MAIL_DEFAULT_SENDER=anais.acquaviva@gmail.com
+```
+
+Créer le mot de passe d’application Gmail (pas le mot de passe du compte) :
+1. Compte Google d’Anaïs → Sécurité → validation en 2 étapes (obligatoire)
+2. https://myaccount.google.com/apppasswords → « Application » = Mail
+3. Coller les 16 caractères dans `MAIL_PASSWORD`
+
+Puis **Reload** l’app Web. Tester `/reserver`.  
+Si le mail n’arrive pas : Spams + boîte « Promotions ». Le destinataire affiché sur le site se règle aussi dans le CMS (Contact).
+
 ## Mises à jour plus tard
 ```bash
 cd ~/aquaviva

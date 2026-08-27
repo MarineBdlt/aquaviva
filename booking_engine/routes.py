@@ -167,7 +167,7 @@ _SETTING_DEFAULTS = {
     "home_slider_mode": "selected",
     "about_image": "images/famille-acqua-viva-pencil.jpg",
     "site_phone": "+55 11 94340-1825",
-    "site_email": "anaisacquaviva@gmail.com",
+    "site_email": "anais.acquaviva@gmail.com",
     "site_logo": "images/la-casa-rosa-logo.jpg",
     "airbnb_url": "",
 }
@@ -244,6 +244,7 @@ def ensure_cms_defaults():
     _ensure_apartment_booking_url_column()
     _ensure_apartment_season_rates_table()
     _ensure_site_logo()
+    _ensure_site_email()
     _apply_casa_rosa_content_seed()
 
 
@@ -282,6 +283,24 @@ _LEGACY_LOGO_PATHS = frozenset({
     "images/la-casa-rosa-logo.png",
     "images/la-casa-rosa-postcard.png",
 })
+
+
+def _ensure_site_email():
+    """Keep site contact email on the current address."""
+    current = "anais.acquaviva@gmail.com"
+    legacy = {
+        "anaisacquaviva@gmail.com",
+        "anais@acquaviva.com",
+    }
+    row = SiteSetting.query.filter_by(setting_key="site_email").first()
+    if not row:
+        db.session.add(SiteSetting(setting_key="site_email", setting_value=current))
+        db.session.commit()
+        return
+    value = (row.setting_value or "").strip().lower()
+    if not value or value in legacy:
+        row.setting_value = current
+        db.session.commit()
 
 
 def _ensure_site_logo():
@@ -751,6 +770,15 @@ def book_online():
             flash(_("book.no_email"))
             return redirect(url_for("book_online"))
 
+        mail_user = (app.config.get("MAIL_USERNAME") or "").strip()
+        mail_pass = (app.config.get("MAIL_PASSWORD") or "").strip()
+        if not mail_user or not mail_pass:
+            app.logger.error(
+                "Booking mail not sent: MAIL_USERNAME / MAIL_PASSWORD missing in .env"
+            )
+            flash(_("book.mail_not_configured"))
+            return redirect(url_for("book_online"))
+
         body = (
             f"Nouvelle demande de réservation — La Casa Rosa\n\n"
             f"Nom : {name}\n"
@@ -761,18 +789,18 @@ def book_online():
             f"Départ : {check_out or '—'}\n\n"
             f"Message :\n{message}\n"
         )
-        sender = app.config.get("MAIL_USERNAME") or recipient
         try:
             msg = Message(
                 subject=f"[La Casa Rosa] Demande de {name}",
-                sender=sender,
+                sender=(mail_user, "La Casa Rosa"),
                 recipients=[recipient],
                 reply_to=email,
                 body=body,
             )
             mail.send(msg)
             flash(_("book.thanks"))
-        except Exception:
+        except Exception as exc:
+            app.logger.exception("Booking mail send failed: %s", exc)
             flash(_("book.mail_error"))
         return redirect(url_for("book_online"))
 

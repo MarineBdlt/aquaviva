@@ -264,6 +264,12 @@ TRANSLATIONS = {
         "pt": "O envio falhou. Tente de novo ou ligue-nos.",
         "it": "Invio non riuscito. Riprovate o chiamateci.",
     },
+    "book.mail_not_configured": {
+        "fr": "L’envoi d’e-mail n’est pas encore configuré sur le serveur. Contactez-nous par téléphone ou WhatsApp.",
+        "en": "Email sending is not configured on the server yet. Please call or WhatsApp us.",
+        "pt": "O envio de e-mail ainda não está configurado no servidor. Ligue ou use o WhatsApp.",
+        "it": "L’invio email non è ancora configurato sul server. Chiamateci o scrivete su WhatsApp.",
+    },
     "footer.map": {
         "fr": "Carte OpenStreetMap",
         "en": "OpenStreetMap",

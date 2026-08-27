@@ -35,13 +35,17 @@ def apply_caching(response):
     response.headers["HTTP-HEADER"] = "VALUE"
     return response
 
-# Configure mail
-app.config['MAIL_SERVER']='smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
+# Configure mail (Gmail SMTP — set MAIL_USERNAME + MAIL_PASSWORD app password in .env)
+app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', '465'))
 app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME', '')
 app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD', '')
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS', 'false').lower() == 'true'
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL', 'true').lower() == 'true'
+app.config['MAIL_DEFAULT_SENDER'] = os.getenv(
+    'MAIL_DEFAULT_SENDER',
+    app.config['MAIL_USERNAME'] or 'anais.acquaviva@gmail.com',
+)
 mail = Mail(app)
 
 

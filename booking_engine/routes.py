@@ -740,76 +740,27 @@ def prices():
 
 @app.route("/reserver", methods=["GET", "POST"])
 def book_online():
-    """Simple booking enquiry form — emails the configured site address."""
+    """Booking enquiry form — forwards to Anaïs’ inbox via FormSubmit (she only receives)."""
     ensure_cms_defaults()
     settings = get_settings("site_email", "site_phone")
     apartments = Apartment.query.order_by(Apartment.name.asc()).all()
-    preselect = request.args.get("apartment_id") or request.form.get("apartment_id")
+    preselect = request.args.get("apartment_id")
 
-    if request.method == "POST":
-        name = (request.form.get("name") or "").strip()
-        email = (request.form.get("email") or "").strip()
-        phone = (request.form.get("phone") or "").strip()
-        check_in = (request.form.get("check_in") or "").strip()
-        check_out = (request.form.get("check_out") or "").strip()
-        message = (request.form.get("message") or "").strip()
-        apartment_id = (request.form.get("apartment_id") or "").strip()
+    if request.args.get("sent") == "1":
+        flash(_("book.thanks"))
 
-        if not name or not email or not message:
-            flash(_("book.required"))
-            return redirect(url_for("book_online"))
-
-        apt_label = ""
-        if apartment_id.isdigit():
-            apt = Apartment.query.filter_by(id=int(apartment_id)).first()
-            if apt:
-                apt_label = apt.name
-
-        recipient = (settings.get("site_email") or "").strip()
-        if not recipient:
-            flash(_("book.no_email"))
-            return redirect(url_for("book_online"))
-
-        mail_user = (app.config.get("MAIL_USERNAME") or "").strip()
-        mail_pass = (app.config.get("MAIL_PASSWORD") or "").strip()
-        if not mail_user or not mail_pass:
-            app.logger.error(
-                "Booking mail not sent: MAIL_USERNAME / MAIL_PASSWORD missing in .env"
-            )
-            flash(_("book.mail_not_configured"))
-            return redirect(url_for("book_online"))
-
-        body = (
-            f"Nouvelle demande de réservation — La Casa Rosa\n\n"
-            f"Nom : {name}\n"
-            f"E-mail : {email}\n"
-            f"Téléphone : {phone or '—'}\n"
-            f"Appartement : {apt_label or 'Non précisé'}\n"
-            f"Arrivée : {check_in or '—'}\n"
-            f"Départ : {check_out or '—'}\n\n"
-            f"Message :\n{message}\n"
-        )
-        try:
-            msg = Message(
-                subject=f"[La Casa Rosa] Demande de {name}",
-                sender=(mail_user, "La Casa Rosa"),
-                recipients=[recipient],
-                reply_to=email,
-                body=body,
-            )
-            mail.send(msg)
-            flash(_("book.thanks"))
-        except Exception as exc:
-            app.logger.exception("Booking mail send failed: %s", exc)
-            flash(_("book.mail_error"))
-        return redirect(url_for("book_online"))
+    phone = settings.get("site_phone") or ""
+    phone_tel = "".join(ch for ch in phone if ch.isdigit() or ch == "+")
+    thanks_url = url_for("book_online", sent=1, _external=True)
 
     return render_template(
         "book.html",
         apartments=apartments,
         preselect=preselect,
-        site_email=settings["site_email"],
-        site_phone=settings["site_phone"],
+        site_email=settings["site_email"] or "anais.acquaviva@gmail.com",
+        site_phone=phone,
+        site_phone_tel=phone_tel,
+        form_thanks_url=thanks_url,
     )
 
 

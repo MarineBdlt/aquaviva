@@ -11,16 +11,31 @@
     <h1 class="av-hero-title h2 mb-2">{{ _('book.title') }}</h1>
     <p class="text-muted mb-4">{{ _('book.intro') }}</p>
 
-    {% if site_phone %}
-    <p class="mb-4">
+    <p class="av-btn-row mb-4">
+        {% if site_phone %}
         <a class="btn btn-outline-secondary" href="tel:{{ site_phone_tel }}">
             {{ _('book.call') }} — {{ site_phone }}
         </a>
+        {% endif %}
+        {% if site_whatsapp_url %}
+        <a class="btn btn-warning" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">
+            WhatsApp
+        </a>
+        {% endif %}
     </p>
-    {% endif %}
 
-    <form class="card p-3 shadow-sm" action="{{ url_for('book_online') }}" method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    {# Posts to FormSubmit → Anaïs only receives mail (one confirmation click the first time). #}
+    <form
+        class="card p-3 shadow-sm"
+        action="https://formsubmit.co/{{ site_email }}"
+        method="POST"
+    >
+        <input type="hidden" name="_subject" value="[La Casa Rosa] Demande de réservation" />
+        <input type="hidden" name="_next" value="{{ form_thanks_url }}" />
+        <input type="hidden" name="_template" value="table" />
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" />
+
         <div class="mb-3">
             <label class="form-label" for="book_name">{{ _('book.name') }}</label>
             <input class="form-control" id="book_name" name="name" required maxlength="100" />
@@ -36,10 +51,10 @@
         {% if apartments %}
         <div class="mb-3">
             <label class="form-label" for="book_apartment">{{ _('book.apartment') }}</label>
-            <select class="form-select" id="book_apartment" name="apartment_id">
+            <select class="form-select" id="book_apartment" name="apartment">
                 <option value="">{{ _('book.apartment_any') }}</option>
                 {% for apt in apartments %}
-                <option value="{{ apt.id }}" {% if preselect and preselect|string == apt.id|string %}selected{% endif %}>
+                <option value="{{ apt.name }}" {% if preselect and preselect|string == apt.id|string %}selected{% endif %}>
                     {{ apt.name }}
                 </option>
                 {% endfor %}
@@ -61,6 +76,7 @@
             <textarea class="form-control" id="book_message" name="message" rows="4" required maxlength="2000"></textarea>
         </div>
         <button class="btn btn-warning" type="submit">{{ _('book.submit') }}</button>
+        <p class="small text-muted mt-3 mb-0">{{ _('book.receive_note') }}</p>
     </form>
 </div>
 {% endblock %}

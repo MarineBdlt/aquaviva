@@ -210,10 +210,10 @@ TRANSLATIONS = {
         "it": "Prenota online",
     },
     "book.intro": {
-        "fr": "Envoyez votre demande de séjour. Vous pouvez aussi nous appeler directement.",
-        "en": "Send your stay enquiry. You can also call us directly.",
-        "pt": "Envie seu pedido de estadia. Você também pode nos ligar diretamente.",
-        "it": "Inviate la richiesta di soggiorno. Potete anche chiamarci direttamente.",
+        "fr": "Envoyez votre demande de séjour. Vous pouvez aussi nous appeler ou écrire sur WhatsApp.",
+        "en": "Send your stay enquiry. You can also call us or write on WhatsApp.",
+        "pt": "Envie seu pedido de estadia. Você também pode ligar ou escrever no WhatsApp.",
+        "it": "Inviate la richiesta di soggiorno. Potete anche chiamarci o scrivere su WhatsApp.",
     },
     "book.call": {
         "fr": "Appeler",
@@ -269,6 +269,12 @@ TRANSLATIONS = {
         "en": "Email sending is not configured on the server yet. Please call or WhatsApp us.",
         "pt": "O envio de e-mail ainda não está configurado no servidor. Ligue ou use o WhatsApp.",
         "it": "L’invio email non è ancora configurato sul server. Chiamateci o scrivete su WhatsApp.",
+    },
+    "book.receive_note": {
+        "fr": "La première fois, Anaïs reçoit un e-mail de confirmation à cliquer — ensuite chaque demande arrive dans sa boîte.",
+        "en": "The first time, Anaïs gets a confirmation email to click — then every enquiry lands in her inbox.",
+        "pt": "Na primeira vez, Anaïs recebe um e-mail de confirmação para clicar — depois cada pedido chega na caixa dela.",
+        "it": "La prima volta Anaïs riceve un’email di conferma da cliccare — poi ogni richiesta arriva nella sua casella.",
     },
     "footer.map": {
         "fr": "Carte OpenStreetMap",

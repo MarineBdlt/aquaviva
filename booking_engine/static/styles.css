@@ -206,8 +206,15 @@ margin-left: 250px;
   border-radius: 2px;
 }
 
+.postcard-frame--family .postcard-frame-img {
+  max-height: 380px;
+  object-fit: contain;
+  background: #fff5f7;
+}
+
 .postcard-frame--lg .postcard-frame-img {
-  max-height: 420px;
+  max-height: 480px;
+  object-fit: contain;
 }
 
 @media (max-width: 768px) {
@@ -216,6 +223,10 @@ margin-left: 250px;
   }
   .postcard-frame-img {
     max-height: 260px;
+  }
+  .postcard-frame--family .postcard-frame-img,
+  .postcard-frame--lg .postcard-frame-img {
+    max-height: 280px;
   }
 }
 

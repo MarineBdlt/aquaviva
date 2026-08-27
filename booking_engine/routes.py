@@ -165,7 +165,7 @@ _SETTING_DEFAULTS = {
     "home_background_image": "",
     "home_slider_ids": "",
     "home_slider_mode": "selected",
-    "about_image": "",
+    "about_image": "images/famille-acqua-viva-pencil.jpg",
     "site_phone": "+55 11 94340-1825",
     "site_email": "anaisacquaviva@gmail.com",
     "site_logo": "images/la-casa-rosa-logo.jpg",

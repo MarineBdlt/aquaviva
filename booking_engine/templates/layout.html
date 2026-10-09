@@ -45,7 +45,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="/static/styles.css?v=book8" rel="stylesheet">
+    <link href="{{ url_for('static', filename='styles.css') }}?v=book8" rel="stylesheet">
 
     <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js" integrity="sha512-LsnSViqQyaXpD4mBBdRYeP6sRwJiJveh2ZIbW41EBrNmKxgr/LFZIiWT6yr+nycvhvauz8c2nYMhrP80YhG7Cw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -55,7 +55,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="//cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
-    <script src="/static/hotel.js" type="text/javascript" defer></script>
+    <script src="{{ url_for('static', filename='hotel.js') }}" type="text/javascript" defer></script>
 
     <title>{% block title %}{{ _('title.home') }}{% endblock %} | {{ _('meta.title_suffix') }}</title>
     {% block structured_data %}{% endblock %}
@@ -86,13 +86,13 @@
         </div>
     </div>
 
-    <div class="bg-img{% if not site_banner_path %} bg-img-plain{% endif %}{% if active_page == 'home' %} home-top-light{% endif %}" id="overlay"{% if site_banner_path %} style="background-image: url('/static/{{ site_banner_path }}');"{% endif %}>
+    <div class="bg-img{% if not site_banner_path %} bg-img-plain{% endif %}{% if active_page == 'home' %} home-top-light{% endif %}" id="overlay"{% if site_banner_path %} style="background-image: url('{{ url_for('static', filename=site_banner_path) }}');"{% endif %}>
         <section>
             <nav class="navbar navbar-expand-lg av-navbar shadow-sm border-bottom" aria-label="{{ _('aria.main_nav') }}">
                 <div class="container">
                     <a class="navbar-brand site-logo-link" href="{{ url_for('index') }}">
                         <figure class="postcard-frame postcard-frame--logo mb-0">
-                            <img src="/static/{{ site_logo_path }}" class="site-logo-img" width="120" height="80" alt="{{ _('logo.alt') }}">
+                            <img src="{{ url_for('static', filename=site_logo_path) }}" class="site-logo-img" width="120" height="80" alt="{{ _('logo.alt') }}">
                         </figure>
                     </a>
                     <button class="navbar-toggler av-menu-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="{{ _('menu.open') }}">
@@ -116,7 +116,7 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ url_for('cms_preview_home') }}" target="_blank" rel="noopener">{{ _('nav.preview') }}</a>
                             </li>
-                            <li class="nav-item"><a class="nav-link" href="/logout">{{ _('nav.logout') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">{{ _('nav.logout') }}</a></li>
                         </ul>
                         {% else %}
                         <ul class="navbar-nav ms-auto align-items-lg-center mt-2">
@@ -130,7 +130,7 @@
                             <li class="nav-item">
                                 <a class="nav-link av-nav-book" href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a>
                             </li>
-                            <li class="nav-item mx-lg-2"><a class="nav-link" href="/admin_login">{{ _('nav.login') }}</a></li>
+                            <li class="nav-item mx-lg-2"><a class="nav-link" href="{{ url_for('admin_login') }}">{{ _('nav.login') }}</a></li>
                         </ul>
                         {% endif %}
                     </div>

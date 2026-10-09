@@ -1,6 +1,6 @@
 from functools import wraps
 
-from flask import redirect, session
+from flask import redirect, session, url_for
 
 from booking_engine import ALLOWED_EXTENSIONS
 
@@ -16,7 +16,7 @@ def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("admin_id") is None:
-            return redirect("/admin_login")
+            return redirect(url_for("admin_login"))
         return f(*args, **kwargs)
     return decorated_function
 

@@ -440,9 +440,9 @@ def _cms_save_uploaded_setting(file_field, setting_key, ok_msg, bad_msg):
                 setting.setting_value = f"uploads/{filename}"
                 db.session.commit()
                 flash(ok_msg)
-            return redirect("/cms")
+            return redirect(url_for("cms"))
     flash(bad_msg)
-    return redirect("/cms")
+    return redirect(url_for("cms"))
 
 
 @app.context_processor
@@ -461,7 +461,7 @@ def set_language(lang):
     referrer = request.referrer
     if referrer and referrer.startswith(request.host_url):
         return redirect(referrer)
-    return redirect("/")
+    return redirect(url_for("index"))
 
 
 @app.context_processor
@@ -649,7 +649,7 @@ def index():
 
         if adults < 1 or adults > 4:
             flash("This gite accepts 1 to 4 guests.")
-            return redirect("/")
+            return redirect(url_for("index"))
 
         day = timedelta(days=1)
         total_days = int((checkout - checkin).days)
@@ -660,11 +660,11 @@ def index():
         # First we check if there is any listed room for the client dates
         if not listed_rooms:
             flash("No rooms available for the selected dates!")
-            return redirect("/")
+            return redirect(url_for("index"))
         
         if len(listed_rooms) < total_days:
             flash(f"Try different search, some dates are taken! Try from {listed_rooms[0].listed_date}")
-            return redirect("/") 
+            return redirect(url_for("index")) 
 
         total_children = 0
 
@@ -716,9 +716,9 @@ def index():
 
         if not bookable_rooms:
             flash("No availability for the selected dates!")
-            return redirect("/")
+            return redirect(url_for("index"))
                                 
-        return redirect("/")
+        return redirect(url_for("index"))
     return render_template("index.html", **_home_page_context())
 
 
@@ -960,12 +960,12 @@ def admin_login():
     
         if not admin or not check_password_hash(admin.password, password):
             flash("Admin username not match or wrong password!")
-            return redirect("/")
+            return redirect(url_for("index"))
         
         session['admin_id'] = admin.id
 
         flash("Login succesful!")
-        return redirect('/admin_panel')
+        return redirect(url_for("admin_panel"))
 
     else:
         host = (request.host or "").split(":")[0].lower()
@@ -979,7 +979,7 @@ def logout():
     session.clear()
     flash("Loged out!")
 
-    return redirect("/")
+    return redirect(url_for("index"))
 
 # This will be turned off from the html layout and navbar
 @app.route("/admin_register", methods=["GET", "POST"])
@@ -1004,7 +1004,7 @@ def admin_register():
         db.session.add(admin)
         db.session.commit()
 
-        return redirect("/admin_login")
+        return redirect(url_for("admin_login"))
 
     return render_template("admin_register.html")
 
@@ -1012,13 +1012,13 @@ def admin_register():
 @app.route("/admin_panel", methods=["GET", "POST"])
 @login_required
 def admin_panel():
-    return redirect("/availability")
+    return redirect(url_for("availability"))
 
 
 @app.route("/admin_manual_reservation", methods=["POST"])
 @login_required
 def admin_manual_reservation():
-    return redirect("/availability")
+    return redirect(url_for("availability"))
 
 
 @app.route("/cms", methods=["GET", "POST"])
@@ -1056,9 +1056,9 @@ def cms():
                     "home": "#section-intro",
                     "about": "#section-about",
                 }.get(updated[0], "")
-                return redirect(f"/cms{anchor}")
+                return redirect(url_for("cms") + anchor)
             flash("Aucun texte à enregistrer.")
-            return redirect("/cms")
+            return redirect(url_for("cms"))
 
         if action == "update_contact":
             phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
@@ -1075,7 +1075,7 @@ def cms():
                 db.session.add(SiteSetting(setting_key="airbnb_url", setting_value=airbnb_val))
             db.session.commit()
             flash("Contact et lien Airbnb enregistrés.")
-            return redirect("/cms#section-global")
+            return redirect(url_for("cms") + "#section-global")
 
         if action == "upload_banner":
             return _cms_save_uploaded_setting(
@@ -1116,7 +1116,7 @@ def cms():
                 flash(f"{added} gallery image(s) uploaded.")
             else:
                 flash("No supported gallery files selected.")
-            return redirect("/cms")
+            return redirect(url_for("cms"))
 
         if action == "update_home_slider":
             ids = []
@@ -1128,7 +1128,7 @@ def cms():
             setting.setting_value = ",".join(str(i) for i in ids)
             db.session.commit()
             flash("Home slider selection updated.")
-            return redirect("/cms#section-intro")
+            return redirect(url_for("cms") + "#section-intro")
 
         if action == "delete_gallery":
             image_id = request.form.get("image_id")
@@ -1137,7 +1137,7 @@ def cms():
                 db.session.delete(image)
                 db.session.commit()
                 flash("Gallery image removed.")
-            return redirect("/cms")
+            return redirect(url_for("cms"))
 
         if action == "update_location_section":
             lang = get_locale()
@@ -1166,7 +1166,7 @@ def cms():
                 nearby_row.setting_value = payload
             db.session.commit()
             flash(f"Section Localisation enregistrée ({LANG_META.get(lang, {}).get('label', lang)}).")
-            return redirect("/cms#section-localisation")
+            return redirect(url_for("cms") + "#section-localisation")
 
         if action == "update_spots_section":
             lang = get_locale()
@@ -1188,7 +1188,7 @@ def cms():
                 spots_row.setting_value = payload
             db.session.commit()
             flash(f"Section Bonnes adresses enregistrée ({LANG_META.get(lang, {}).get('label', lang)}).")
-            return redirect("/cms#section-spots")
+            return redirect(url_for("cms") + "#section-spots")
 
         if action == "approve_guestbook":
             entry_id = request.form.get("entry_id")
@@ -1197,7 +1197,7 @@ def cms():
                 entry.is_approved = True
                 db.session.commit()
                 flash("Message du livre d’or approuvé.")
-            return redirect("/cms#section-guestbook")
+            return redirect(url_for("cms") + "#section-guestbook")
 
         if action == "add_guestbook":
             name = (request.form.get("author_name") or "").strip()
@@ -1211,7 +1211,7 @@ def cms():
             )
             if not name or not message:
                 flash("Nom et message sont requis pour le livre d’or.")
-                return redirect("/cms#section-guestbook")
+                return redirect(url_for("cms") + "#section-guestbook")
             if len(message) > 800:
                 message = message[:800]
             db.session.add(
@@ -1225,7 +1225,7 @@ def cms():
             )
             db.session.commit()
             flash("Message du livre d’or publié.")
-            return redirect("/cms#section-guestbook")
+            return redirect(url_for("cms") + "#section-guestbook")
 
         if action == "delete_guestbook":
             entry_id = request.form.get("entry_id")
@@ -1234,7 +1234,7 @@ def cms():
                 db.session.delete(entry)
                 db.session.commit()
                 flash("Message du livre d’or supprimé.")
-            return redirect("/cms#section-guestbook")
+            return redirect(url_for("cms") + "#section-guestbook")
 
     page_keys = ("home", "about", "prices", "gallery", "location", "spots")
     lang = get_locale()
@@ -1471,7 +1471,7 @@ def create_rooms():
         room.room_description = room_description
         db.session.commit()
 
-        return redirect("/create_rooms")
+        return redirect(url_for("create_rooms"))
     else:
         room_info = [room]
         return render_template("create_rooms.html", room_info=room_info)
@@ -1489,7 +1489,7 @@ def delete_rooms():
         if delete_room:
             Room.query.filter(Room.id == delete_room).delete()
             db.session.commit()
-            return redirect("/create_rooms")
+            return redirect(url_for("create_rooms"))
 
 
 def _save_apartment_photos(apartment, files, caption=None):
@@ -1569,19 +1569,19 @@ def manage_apartments():
 
             if not name:
                 flash("Le nom de l'appartement est requis.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
             if Apartment.query.filter_by(name=name).first():
                 flash("Un appartement avec ce nom existe déjà.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
             try:
                 bedrooms = int(bedrooms_raw)
                 rate = int(rate_raw)
             except (TypeError, ValueError):
                 flash("Nombre de chambres et tarif doivent être des nombres entiers.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
             if bedrooms < 1 or rate < 0:
                 flash("Vérifiez le nombre de chambres et le tarif.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
 
             apartment = Apartment(
                 name=name,
@@ -1602,14 +1602,14 @@ def manage_apartments():
                 f"Appartement « {name} » créé"
                 + (f" avec {added} photo(s)." if added else ".")
             )
-            return redirect("/manage_apartments")
+            return redirect(url_for("manage_apartments"))
 
         if action == "update":
             apartment_id = request.form.get("apartment_id")
             apartment = Apartment.query.filter_by(id=apartment_id).first()
             if not apartment:
                 flash("Appartement introuvable.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
 
             name = (request.form.get("name") or "").strip()
             bedrooms_raw = request.form.get("bedrooms")
@@ -1618,22 +1618,22 @@ def manage_apartments():
 
             if not name:
                 flash("Le nom de l'appartement est requis.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
             duplicate = Apartment.query.filter(
                 Apartment.name == name, Apartment.id != apartment.id
             ).first()
             if duplicate:
                 flash("Un autre appartement utilise déjà ce nom.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
             try:
                 bedrooms = int(bedrooms_raw)
                 rate = int(rate_raw)
             except (TypeError, ValueError):
                 flash("Nombre de chambres et tarif doivent être des nombres entiers.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
             if bedrooms < 1 or rate < 0:
                 flash("Vérifiez le nombre de chambres et le tarif.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
 
             apartment.name = name
             apartment.bedrooms = bedrooms
@@ -1642,14 +1642,14 @@ def manage_apartments():
             apartment.booking_url = (request.form.get("booking_url") or "").strip() or None
             db.session.commit()
             flash(f"Appartement « {name} » mis à jour.")
-            return redirect("/manage_apartments")
+            return redirect(url_for("manage_apartments"))
 
         if action == "add_photos":
             apartment_id = request.form.get("apartment_id")
             apartment = Apartment.query.filter_by(id=apartment_id).first()
             if not apartment:
                 flash("Appartement introuvable.")
-                return redirect("/manage_apartments")
+                return redirect(url_for("manage_apartments"))
             added = _save_apartment_photos(
                 apartment,
                 request.files.getlist("photos"),
@@ -1660,7 +1660,7 @@ def manage_apartments():
                 flash(f"{added} photo(s) ajoutée(s) à « {apartment.name} ».")
             else:
                 flash("Aucune photo valide sélectionnée.")
-            return redirect("/manage_apartments")
+            return redirect(url_for("manage_apartments"))
 
         if action == "delete_photo":
             image_id = request.form.get("image_id")
@@ -1669,7 +1669,7 @@ def manage_apartments():
                 db.session.delete(image)
                 db.session.commit()
                 flash("Photo supprimée.")
-            return redirect("/manage_apartments")
+            return redirect(url_for("manage_apartments"))
 
         if action == "delete":
             apartment_id = request.form.get("apartment_id")
@@ -1679,7 +1679,7 @@ def manage_apartments():
                 db.session.delete(apartment)
                 db.session.commit()
                 flash(f"Appartement « {name} » supprimé.")
-            return redirect("/manage_apartments")
+            return redirect(url_for("manage_apartments"))
 
     apartments = Apartment.query.order_by(Apartment.name.asc()).all()
     return render_template("manage_apartments.html", apartments=apartments)
@@ -1689,13 +1689,13 @@ def manage_apartments():
 @app.route("/rate_plans", methods=["GET", "POST"])
 @login_required
 def rate_plans():
-    return redirect("/availability")
+    return redirect(url_for("availability"))
 
 
 @app.route("/view_rate_plans", methods=["GET", "POST"])
 @login_required
 def view_rate_plans():
-    return redirect("/availability")
+    return redirect(url_for("availability"))
 
 
 # Availability: one calendar per apartment + admin booking entry
@@ -1916,7 +1916,7 @@ def stop_sale():
                     each_room.is_it_available = 1
                     db.session.commit()
 
-        return redirect("/availability")
+        return redirect(url_for("availability"))
 
 
 
@@ -1938,7 +1938,7 @@ def add_room():
 
         if add_room_quantity > room.total_of_this_type:
             flash("Cannot add more than total amount!")
-            return redirect("/availability")
+            return redirect(url_for("availability"))
 
         for listed_room in listed_rooms:
 
@@ -1949,7 +1949,7 @@ def add_room():
 
             if len(check_dates) != 0:
                 flash(f"Cannot add more rooms from total owned of this type {room.name} for the date {[date for date in check_dates]}") 
-                return redirect("/availability")
+                return redirect(url_for("availability"))
 
      
         dates = _inclusive_dates(start_date, end_date)
@@ -2005,7 +2005,7 @@ def add_room():
         # Final commit and redirect
         db.session.commit()
 
-        return redirect("/availability")
+        return redirect(url_for("availability"))
 
     else:
     

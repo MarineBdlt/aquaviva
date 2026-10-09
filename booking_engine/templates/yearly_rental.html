@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+{% from "macros/pencil_icons.html" import pencil_icon, section_title %}
+{% set active_page = "yearly" %}
+
+{% block title %}
+{{ yearly.title or _('title.yearly') }}
+{% endblock %}
+
+{% block meta_description %}{{ yearly.body|striptags|truncate(155, True, '…') }}{% endblock %}
+{% block og_title %}{{ yearly.title or _('title.yearly') }} — La Casa Rosa{% endblock %}
+{% block canonical %}{{ url_for('yearly_rental', _external=True) }}{% endblock %}
+
+{% block main %}
+<div class="container text-start">
+    {{ section_title('home', yearly.title or _('title.yearly')) }}
+
+    {% if not yearly.enabled %}
+    <p class="lead text-muted">{{ _('yearly.not_published') }}</p>
+    <p class="mb-0">
+        <a class="av-inline-link" href="mailto:{{ site_email }}">{{ site_email }}</a>
+        · <a class="av-inline-link" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener">WhatsApp</a>
+    </p>
+    {% else %}
+
+    {% if yearly.body %}
+    <p class="lead text-dark">{{ yearly.body }}</p>
+    {% endif %}
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">{{ _('yearly.pricing') }}</h2>
+                    {% if yearly.price_year %}
+                    <p class="display-6 mb-1">{{ yearly.price_year }} €</p>
+                    <p class="text-muted mb-3">{{ _('yearly.per_year') }}</p>
+                    {% endif %}
+                    <ul class="list-unstyled mb-0">
+                        {% if yearly.price_month %}
+                        <li class="mb-2"><strong>{{ yearly.price_month }} €</strong> {{ _('yearly.per_month') }}</li>
+                        {% endif %}
+                        {% if yearly.charges_month %}
+                        <li class="mb-2"><strong>{{ yearly.charges_month }} €</strong> {{ _('yearly.charges') }}</li>
+                        {% endif %}
+                        {% if yearly.deposit %}
+                        <li class="mb-2"><strong>{{ yearly.deposit }} €</strong> {{ _('yearly.deposit') }}</li>
+                        {% endif %}
+                        {% if yearly.available_from %}
+                        <li class="mb-2">{{ _('yearly.available_from') }} : <strong>{{ yearly.available_from }}</strong></li>
+                        {% endif %}
+                    </ul>
+                    {% if not yearly.price_year and not yearly.price_month %}
+                    <p class="text-muted mb-0">{{ _('yearly.price_on_request') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100 border-0">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">{{ _('yearly.includes') }}</h2>
+                    {% if yearly.includes %}
+                    <ul class="mb-0">
+                        {% for item in yearly.includes %}
+                        <li>{{ item }}</li>
+                        {% endfor %}
+                    </ul>
+                    {% else %}
+                    <p class="text-muted mb-0">{{ _('yearly.includes_empty') }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section class="mb-5" id="demande">
+        <h2 class="h4 mb-3">{{ _('yearly.form_title') }}</h2>
+        <p class="text-muted mb-3">{{ _('yearly.form_intro') }}</p>
+        <form class="card p-3 shadow-sm" action="{{ url_for('yearly_rental') }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label" for="guest_name">{{ _('yearly.name') }} *</label>
+                    <input class="form-control" id="guest_name" name="guest_name" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="guest_email">{{ _('yearly.email') }} *</label>
+                    <input class="form-control" id="guest_email" name="guest_email" type="email" required />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="guest_phone">{{ _('yearly.phone') }}</label>
+                    <input class="form-control" id="guest_phone" name="guest_phone" />
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label" for="desired_start">{{ _('yearly.desired_start') }}</label>
+                    <input class="form-control" id="desired_start" name="desired_start" placeholder="{{ _('yearly.desired_start_ph') }}" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label" for="message">{{ _('yearly.message') }}</label>
+                    <textarea class="form-control" id="message" name="message" rows="4"></textarea>
+                </div>
+            </div>
+            <button class="btn btn-warning mt-3" type="submit">{{ _('yearly.submit') }}</button>
+        </form>
+    </section>
+
+    <p class="mb-0">
+        <a class="av-inline-link" href="{{ url_for('index') }}#appartements">{{ _('nav.apartments') }} →</a>
+        · <a class="av-inline-link" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }} →</a>
+    </p>
+    {% endif %}
+</div>
+{% endblock %}

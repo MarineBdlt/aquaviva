@@ -113,6 +113,9 @@
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('prices') }}">{{ _('nav.prices') }}</a></li>
+                            {% if yearly_rental_enabled %}
+                            <li class="nav-item {{'active' if active_page == 'yearly'}}"><a class="nav-link" href="{{ url_for('yearly_rental') }}">{{ _('nav.yearly') }}</a></li>
+                            {% endif %}
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }}</a></li>
                             <li class="nav-item mx-lg-2"><a class="nav-link" href="/admin_login">{{ _('nav.login') }}</a></li>
                         </ul>
@@ -149,6 +152,9 @@
                         <li><a href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
                         <li><a href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
                         <li><a href="{{ url_for('prices') }}">{{ _('nav.prices') }}</a></li>
+                        {% if yearly_rental_enabled %}
+                        <li><a href="{{ url_for('yearly_rental') }}">{{ _('nav.yearly') }}</a></li>
+                        {% endif %}
                     </ul>
                 </div>
                 <div class="col-md-4">

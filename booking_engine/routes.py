@@ -20,6 +20,7 @@ from booking_engine.models import (
     ApartmentReservation,
     ApartmentMonthlyRate,
     GuestbookEntry,
+    YearlyRentalInquiry,
 )
 from booking_engine.i18n import (
     _,
@@ -147,6 +148,28 @@ CMS_DEFAULTS = {
     "spots": {
         lang: (spots["title"], spots["intro"]) for lang, spots in GOOD_SPOTS.items()
     },
+    "yearly": {
+        "fr": (
+            "Location à l’année",
+            "Louez la villa Aqua Viva à l’année à Calcatoggio : cadre calme, "
+            "vue mer, plage à 5 minutes à pied. Idéal pour un séjour longue durée en Corse.",
+        ),
+        "en": (
+            "Yearly rental",
+            "Rent villa Aqua Viva year-round in Calcatoggio: quiet setting, "
+            "sea view, beach a 5-minute walk away. Ideal for a long stay in Corsica.",
+        ),
+        "pt": (
+            "Arrendamento anual",
+            "Arrende a villa Aqua Viva o ano inteiro em Calcatoggio: ambiente calmo, "
+            "vista mar, praia a 5 minutos a pé. Ideal para uma estadia longa na Córsega.",
+        ),
+        "it": (
+            "Affitto annuale",
+            "Affittate la villa Aqua Viva tutto l’anno a Calcatoggio: ambientazione tranquilla, "
+            "vista mare, spiaggia a 5 minuti a piedi. Ideale per un soggiorno lungo in Corsica.",
+        ),
+    },
 }
 
 
@@ -160,6 +183,20 @@ _SETTING_DEFAULTS = {
     "site_phone": "+55 11 94340-1825",
     "site_email": "anaisacquaviva@gmail.com",
     "site_logo": "images/villa-aqua-viva-postcard.png",
+    # Location villa à l'année (éditables dans le CMS)
+    "yearly_enabled": "0",
+    "yearly_price_year": "",
+    "yearly_price_month": "",
+    "yearly_charges_month": "",
+    "yearly_deposit": "",
+    "yearly_available_from": "",
+    "yearly_includes": (
+        "Villa meublée\n"
+        "Eau et électricité selon contrat\n"
+        "Wi-Fi\n"
+        "Parking sur place\n"
+        "Accès plage à pied"
+    ),
 }
 
 
@@ -170,6 +207,63 @@ def get_settings(*keys):
     rows = SiteSetting.query.filter(SiteSetting.setting_key.in_(keys)).all()
     found = {row.setting_key: row.setting_value for row in rows}
     return {key: found.get(key, _SETTING_DEFAULTS.get(key, "")) for key in keys}
+
+
+_YEARLY_SETTING_KEYS = (
+    "yearly_enabled",
+    "yearly_price_year",
+    "yearly_price_month",
+    "yearly_charges_month",
+    "yearly_deposit",
+    "yearly_available_from",
+    "yearly_includes",
+)
+
+
+def _parse_euro_amount(raw):
+    """Return int euros from a form/setting string, or None if empty/invalid."""
+    text = (raw or "").strip().replace(" ", "").replace(",", ".")
+    if not text:
+        return None
+    try:
+        return int(round(float(text)))
+    except ValueError:
+        return None
+
+
+def get_yearly_rental_offer(lang=None):
+    """Public/admin payload for yearly villa rental."""
+    ensure_cms_defaults()
+    settings = get_settings(*_YEARLY_SETTING_KEYS)
+    content = get_site_content("yearly")
+    includes = [
+        line.strip()
+        for line in (settings.get("yearly_includes") or "").splitlines()
+        if line.strip()
+    ]
+    return {
+        "enabled": (settings.get("yearly_enabled") or "0").strip() == "1",
+        "price_year": _parse_euro_amount(settings.get("yearly_price_year")),
+        "price_month": _parse_euro_amount(settings.get("yearly_price_month")),
+        "charges_month": _parse_euro_amount(settings.get("yearly_charges_month")),
+        "deposit": _parse_euro_amount(settings.get("yearly_deposit")),
+        "available_from": (settings.get("yearly_available_from") or "").strip(),
+        "includes": includes,
+        "includes_text": settings.get("yearly_includes") or "",
+        "title": content.get("title") or "",
+        "body": content.get("body") or "",
+        "raw": settings,
+    }
+
+
+def _upsert_setting(key, value):
+    row = SiteSetting.query.filter_by(setting_key=key).first()
+    if not row:
+        row = SiteSetting(setting_key=key, setting_value=value or "")
+        db.session.add(row)
+    else:
+        row.setting_value = value or ""
+    return row
 
 
 def ensure_cms_defaults():
@@ -297,13 +391,16 @@ def set_language(lang):
 
 @app.context_processor
 def inject_site_banner():
-    settings = get_settings("site_phone", "site_email", "site_logo", "banner_image")
+    settings = get_settings(
+        "site_phone", "site_email", "site_logo", "banner_image", "yearly_enabled"
+    )
     context = {
         "site_phone": settings["site_phone"],
         "site_email": settings["site_email"],
         "site_logo_path": settings["site_logo"],
         "site_whatsapp_url": "https://wa.me/5511943401825",
         "site_banner_path": "",
+        "yearly_rental_enabled": (settings.get("yearly_enabled") or "0") == "1",
     }
     if request.path not in ("/", "/cms/preview"):
         context["site_banner_path"] = settings["banner_image"]
@@ -564,7 +661,67 @@ def gallery():
 @app.route("/prices", methods=["GET"])
 def prices():
     ensure_cms_defaults()
-    return render_template("prices.html", prices_content=get_site_content("prices"))
+    return render_template(
+        "prices.html",
+        prices_content=get_site_content("prices"),
+        yearly=get_yearly_rental_offer(),
+    )
+
+
+@app.route("/location-annuelle", methods=["GET", "POST"])
+def yearly_rental():
+    """Location de la villa à l'année — offre + formulaire de demande."""
+    ensure_cms_defaults()
+    yearly = get_yearly_rental_offer()
+
+    if request.method == "POST":
+        if not yearly["enabled"]:
+            flash(_("yearly.not_available"))
+            return redirect(url_for("yearly_rental"))
+        name = (request.form.get("guest_name") or "").strip()
+        email = (request.form.get("guest_email") or "").strip()
+        phone = (request.form.get("guest_phone") or "").strip()
+        desired_start = (request.form.get("desired_start") or "").strip()
+        message = (request.form.get("message") or "").strip()
+        if not name or not email:
+            flash(_("yearly.form_required"))
+            return redirect(url_for("yearly_rental"))
+        inquiry = YearlyRentalInquiry(
+            guest_name=name,
+            guest_email=email,
+            guest_phone=phone or None,
+            desired_start=desired_start or None,
+            message=message or None,
+        )
+        db.session.add(inquiry)
+        db.session.commit()
+
+        site_email = get_settings("site_email").get("site_email") or ""
+        if site_email and app.config.get("MAIL_USERNAME"):
+            try:
+                msg = Message(
+                    subject=f"[Aqua Viva] Demande location annuelle — {name}",
+                    sender=app.config["MAIL_USERNAME"],
+                    recipients=[site_email],
+                    body=(
+                        f"Nom : {name}\n"
+                        f"E-mail : {email}\n"
+                        f"Téléphone : {phone or '—'}\n"
+                        f"Début souhaité : {desired_start or '—'}\n\n"
+                        f"{message or ''}\n"
+                    ),
+                )
+                mail.send(msg)
+            except Exception:
+                pass
+        flash(_("yearly.form_thanks"))
+        return redirect(url_for("yearly_rental"))
+
+    return render_template(
+        "yearly_rental.html",
+        yearly=yearly,
+        villa=get_villa_info(),
+    )
 
 
 @app.route("/about", methods=["GET"])
@@ -804,7 +961,7 @@ def cms():
 
         if action == "update_content":
             lang = get_locale()
-            pages = ("home", "about", "prices", "gallery")
+            pages = ("home", "about", "prices", "gallery", "yearly")
             updated = []
             for page_key in pages:
                 title = request.form.get(f"{page_key}_title")
@@ -829,10 +986,58 @@ def cms():
                     "home": "#section-intro",
                     "about": "#section-about",
                     "prices": "#section-prices",
+                    "yearly": "#section-yearly",
                 }.get(updated[0], "")
                 return redirect(f"/cms{anchor}")
             flash("Aucun texte à enregistrer.")
             return redirect("/cms")
+
+        if action == "update_yearly_rental":
+            enabled = "1" if request.form.get("yearly_enabled") == "1" else "0"
+            _upsert_setting("yearly_enabled", enabled)
+            for key in (
+                "yearly_price_year",
+                "yearly_price_month",
+                "yearly_charges_month",
+                "yearly_deposit",
+                "yearly_available_from",
+                "yearly_includes",
+            ):
+                _upsert_setting(key, request.form.get(key, "").strip())
+            lang = get_locale()
+            title = request.form.get("yearly_title")
+            body = request.form.get("yearly_body")
+            if title is not None or body is not None:
+                key = content_page_key("yearly", lang)
+                page = SiteContent.query.filter_by(page_key=key).first()
+                if not page:
+                    page = SiteContent(page_key=key, title="", body="")
+                    db.session.add(page)
+                if title is not None:
+                    page.title = title.strip()
+                if body is not None:
+                    page.body = body.strip()
+            db.session.commit()
+            flash("Location à l’année enregistrée.")
+            return redirect("/cms#section-yearly")
+
+        if action == "mark_yearly_inquiry":
+            inquiry_id = request.form.get("inquiry_id", type=int)
+            inquiry = YearlyRentalInquiry.query.get(inquiry_id) if inquiry_id else None
+            if inquiry:
+                inquiry.is_handled = True
+                db.session.commit()
+                flash("Demande marquée comme traitée.")
+            return redirect("/cms#section-yearly")
+
+        if action == "delete_yearly_inquiry":
+            inquiry_id = request.form.get("inquiry_id", type=int)
+            inquiry = YearlyRentalInquiry.query.get(inquiry_id) if inquiry_id else None
+            if inquiry:
+                db.session.delete(inquiry)
+                db.session.commit()
+                flash("Demande supprimée.")
+            return redirect("/cms#section-yearly")
 
         if action == "update_contact":
             phone = SiteSetting.query.filter_by(setting_key="site_phone").first()
@@ -974,7 +1179,7 @@ def cms():
                 flash("Message du livre d’or supprimé.")
             return redirect("/cms#section-guestbook")
 
-    page_keys = ("home", "about", "prices", "gallery", "location", "spots")
+    page_keys = ("home", "about", "prices", "gallery", "location", "spots", "yearly")
     lang = get_locale()
     contents = {}
     for k in page_keys:
@@ -1018,6 +1223,12 @@ def cms():
         .limit(30)
         .all()
     )
+    yearly = get_yearly_rental_offer()
+    yearly_inquiries = (
+        YearlyRentalInquiry.query.order_by(YearlyRentalInquiry.created_at.desc())
+        .limit(40)
+        .all()
+    )
 
     return render_template(
         "cms.html",
@@ -1039,6 +1250,8 @@ def cms():
         preview_url=url_for("cms_preview_home"),
         guestbook_pending=guestbook_pending,
         guestbook_approved=guestbook_approved,
+        yearly=yearly,
+        yearly_inquiries=yearly_inquiries,
     )
 
 
@@ -1073,6 +1286,7 @@ def _home_page_context():
         "hero_images": hero_images,
         "villa": get_villa_info(),
         "guestbook_entries": guestbook_entries,
+        "yearly": get_yearly_rental_offer(),
     }
 
 
@@ -1135,6 +1349,8 @@ def sitemap_xml():
         url_for("prices", _external=True),
         url_for("about", _external=True),
     ]
+    if get_yearly_rental_offer().get("enabled"):
+        pages.append(url_for("yearly_rental", _external=True))
     urls = "".join(
         f"<url><loc>{page}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>"
         for page in pages

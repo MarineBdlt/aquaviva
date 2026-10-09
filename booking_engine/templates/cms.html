@@ -29,6 +29,7 @@ CMS
         <a href="#section-about">Qui sommes-nous</a>
         <a href="#section-spots">Bonnes adresses</a>
         <a href="#section-prices">Tarifs</a>
+        <a href="#section-yearly">Location à l’année</a>
         <a href="#section-guestbook">Livre d’or</a>
         <a href="#section-global">Réglages</a>
     </nav>
@@ -211,10 +212,99 @@ CMS
                     </div>
                 </div>
 
+                <div class="accordion-item" id="section-yearly">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accYearly">
+                            6 · Location à l’année
+                        </button>
+                    </h2>
+                    <div id="accYearly" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
+                        <div class="accordion-body">
+                            <p class="small text-muted mb-3">
+                                Publiez une offre de location de la villa pour 12 mois.
+                                Page publique : <a href="{{ url_for('yearly_rental') }}" target="_blank" rel="noopener">/location-annuelle</a>
+                            </p>
+                            <form action="{{ url_for('cms') }}" method="post" class="mb-4">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                <input type="hidden" name="action" value="update_yearly_rental" />
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="yearly_enabled" name="yearly_enabled" value="1" {% if yearly.enabled %}checked{% endif %} />
+                                    <label class="form-check-label" for="yearly_enabled">Publier l’offre sur le site</label>
+                                </div>
+                                <label class="form-label">Titre (langue courante)</label>
+                                <input class="form-control mb-2" type="text" name="yearly_title" value="{{ contents.yearly.title if contents.yearly else yearly.title }}" />
+                                <label class="form-label">Texte d’intro</label>
+                                <textarea class="form-control mb-2" name="yearly_body" rows="3">{{ contents.yearly.body if contents.yearly else yearly.body }}</textarea>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label">Prix / an (€)</label>
+                                        <input class="form-control" type="text" name="yearly_price_year" value="{{ yearly.raw.yearly_price_year }}" placeholder="ex. 18000" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Prix / mois (€)</label>
+                                        <input class="form-control" type="text" name="yearly_price_month" value="{{ yearly.raw.yearly_price_month }}" placeholder="ex. 1500" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Charges / mois (€)</label>
+                                        <input class="form-control" type="text" name="yearly_charges_month" value="{{ yearly.raw.yearly_charges_month }}" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Caution (€)</label>
+                                        <input class="form-control" type="text" name="yearly_deposit" value="{{ yearly.raw.yearly_deposit }}" />
+                                    </div>
+                                </div>
+                                <label class="form-label">Disponible à partir de</label>
+                                <input class="form-control mb-2" type="text" name="yearly_available_from" value="{{ yearly.raw.yearly_available_from }}" placeholder="ex. septembre 2026" />
+                                <label class="form-label">Inclus (une ligne = un point)</label>
+                                <textarea class="form-control mb-3" name="yearly_includes" rows="5">{{ yearly.includes_text }}</textarea>
+                                <button class="btn btn-warning" type="submit">Enregistrer la location à l’année</button>
+                            </form>
+
+                            <h3 class="h6 text-warning">Demandes reçues ({{ yearly_inquiries|length }})</h3>
+                            {% if yearly_inquiries %}
+                            <ul class="list-group list-group-flush">
+                                {% for inq in yearly_inquiries %}
+                                <li class="list-group-item px-0">
+                                    <div class="d-flex justify-content-between gap-2 flex-wrap">
+                                        <div>
+                                            <strong>{{ inq.guest_name }}</strong>
+                                            · <a href="mailto:{{ inq.guest_email }}">{{ inq.guest_email }}</a>
+                                            {% if inq.guest_phone %}· {{ inq.guest_phone }}{% endif %}
+                                            {% if inq.is_handled %}<span class="badge bg-success">Traitée</span>{% else %}<span class="badge bg-warning text-dark">Nouvelle</span>{% endif %}
+                                            <div class="small text-muted">{{ inq.created_at.strftime('%d/%m/%Y %H:%M') }}{% if inq.desired_start %} · début : {{ inq.desired_start }}{% endif %}</div>
+                                            {% if inq.message %}<p class="small mb-0 mt-1">{{ inq.message }}</p>{% endif %}
+                                        </div>
+                                        <div class="d-flex gap-1">
+                                            {% if not inq.is_handled %}
+                                            <form action="{{ url_for('cms') }}" method="post">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                                <input type="hidden" name="action" value="mark_yearly_inquiry" />
+                                                <input type="hidden" name="inquiry_id" value="{{ inq.id }}" />
+                                                <button class="btn btn-sm btn-outline-success" type="submit">OK</button>
+                                            </form>
+                                            {% endif %}
+                                            <form action="{{ url_for('cms') }}" method="post">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                                                <input type="hidden" name="action" value="delete_yearly_inquiry" />
+                                                <input type="hidden" name="inquiry_id" value="{{ inq.id }}" />
+                                                <button class="btn btn-sm btn-outline-danger" type="submit">×</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <p class="small text-muted mb-0">Aucune demande pour l’instant.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 <div class="accordion-item" id="section-guestbook">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accGuestbook">
-                            6 · Livre d’or
+                            7 · Livre d’or
                         </button>
                     </h2>
                     <div id="accGuestbook" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">
@@ -277,7 +367,7 @@ CMS
                 <div class="accordion-item" id="section-global">
                     <h2 class="accordion-header">
                         <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#accGlobal">
-                            7 · Réglages globaux
+                            8 · Réglages globaux
                         </button>
                     </h2>
                     <div id="accGlobal" class="accordion-collapse collapse" data-bs-parent="#cmsAccordion">

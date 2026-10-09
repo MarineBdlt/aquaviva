@@ -13,6 +13,20 @@
 <div class="container text-start">
     {{ section_title('prices', prices_content.title, 'h1') }}
     <p class="lead text-dark">{{ prices_content.body }}</p>
+    {% if yearly and yearly.enabled %}
+    <div class="card shadow-sm border-0 my-4">
+        <div class="card-body">
+            <h2 class="h5 mb-2">{{ yearly.title or _('nav.yearly') }}</h2>
+            {% if yearly.price_year %}
+            <p class="mb-2"><strong>{{ yearly.price_year }} €</strong> {{ _('yearly.per_year') }}
+            {% if yearly.price_month %} · {{ yearly.price_month }} € {{ _('yearly.per_month') }}{% endif %}
+            </p>
+            {% endif %}
+            <a class="btn btn-warning btn-sm" href="{{ url_for('yearly_rental') }}">{{ _('nav.yearly') }} →</a>
+        </div>
+    </div>
+    {% endif %}
+
     <p class="mt-4 mb-0">
         <a class="av-inline-link" href="{{ url_for('index') }}#appartements">{{ _('nav.apartments') }} →</a>
         · <a class="av-inline-link" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }} →</a>

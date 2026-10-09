@@ -76,6 +76,12 @@
             {{ pencil_icon('book', 88) }}
             <span class="home-shortcut-label">{{ _('home.shortcut_guestbook') }}</span>
         </a>
+        {% if yearly and yearly.enabled %}
+        <a class="home-shortcut" href="{{ url_for('yearly_rental') }}">
+            {{ pencil_icon('home', 88) }}
+            <span class="home-shortcut-label">{{ _('home.shortcut_yearly') }}</span>
+        </a>
+        {% endif %}
     </nav>
 
     <section class="mb-5 av-section" id="appartements" style="scroll-margin-top: 100px;">

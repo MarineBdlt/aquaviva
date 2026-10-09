@@ -1,0 +1,170 @@
+{# Calculateur durée : jours / semaines / mois #}
+{% macro quote_widget(apartments, offers=None, compact=false) %}
+<section class="av-quote{% if compact %} av-quote--compact{% endif %}" id="tarifs-rapides" data-quote-url="{{ url_for('api_quote') }}" aria-labelledby="quote-heading">
+  <div class="av-quote-card">
+    <h2 class="h4 mb-1" id="quote-heading">{{ _('quote.heading') }}</h2>
+    <p class="text-muted small mb-3">{{ _('quote.intro') }}</p>
+
+    <div class="av-quote-units btn-group mb-3" role="group" aria-label="{{ _('quote.unit_label') }}">
+      <button type="button" class="btn btn-outline-secondary av-quote-unit active" data-unit="days">{{ _('quote.days') }}</button>
+      <button type="button" class="btn btn-outline-secondary av-quote-unit" data-unit="weeks">{{ _('quote.weeks') }}</button>
+      <button type="button" class="btn btn-outline-secondary av-quote-unit" data-unit="months">{{ _('quote.months') }}</button>
+    </div>
+
+    <div class="row g-2 align-items-end">
+      <div class="col-sm-6 col-lg-3">
+        <label class="form-label small mb-1" for="quote_apartment">{{ _('quote.apartment') }}</label>
+        <select class="form-select" id="quote_apartment">
+          {% for a in apartments %}
+          <option value="{{ a.id }}" data-rate="{{ a.rate }}">{{ a.name }} · {{ a.rate }}€/{{ _('quote.night_short') }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-6 col-lg-2">
+        <label class="form-label small mb-1" for="quote_qty">{{ _('quote.quantity') }}</label>
+        <div class="input-group">
+          <button type="button" class="btn btn-outline-secondary" id="quote_minus" aria-label="-">−</button>
+          <input class="form-control text-center" id="quote_qty" type="number" min="1" max="365" value="7" />
+          <button type="button" class="btn btn-outline-secondary" id="quote_plus" aria-label="+">+</button>
+        </div>
+      </div>
+      <div class="col-6 col-lg-3">
+        <label class="form-label small mb-1" for="quote_start">{{ _('quote.start') }}</label>
+        <input class="form-control" id="quote_start" type="date" />
+      </div>
+      <div class="col-lg-4">
+        <div class="av-quote-result" aria-live="polite">
+          <div class="av-quote-total"><span id="quote_total">—</span> €</div>
+          <div class="small text-muted" id="quote_detail">{{ _('quote.pick') }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="av-btn-row mt-3 mb-0">
+      <a class="btn btn-warning" id="quote_book_link" href="{{ url_for('book_online') }}">{{ _('quote.cta') }}</a>
+      <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }}</a>
+    </div>
+  </div>
+</section>
+<script>
+(function () {
+  const root = document.getElementById('tarifs-rapides');
+  if (!root) return;
+  const url = root.dataset.quoteUrl;
+  const apt = document.getElementById('quote_apartment');
+  const qty = document.getElementById('quote_qty');
+  const start = document.getElementById('quote_start');
+  const totalEl = document.getElementById('quote_total');
+  const detailEl = document.getElementById('quote_detail');
+  const bookLink = document.getElementById('quote_book_link');
+  let unit = 'days';
+  const today = new Date();
+  start.value = today.toISOString().slice(0, 10);
+
+  function labels() {
+    return {
+      days: {{ _('quote.nights_word')|tojson }},
+      weeks: {{ _('quote.weeks_word')|tojson }},
+      months: {{ _('quote.months_word')|tojson }},
+      avg: {{ _('quote.avg_night')|tojson }},
+      from: {{ _('quote.from')|tojson }},
+      to: {{ _('quote.to')|tojson }},
+    };
+  }
+
+  function refresh() {
+    const q = new URLSearchParams({
+      apartment_id: apt.value,
+      unit: unit,
+      quantity: qty.value || 1,
+      start: start.value,
+    });
+    fetch(url + '?' + q.toString(), { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (!data.ok) {
+          totalEl.textContent = '—';
+          detailEl.textContent = data.error || '—';
+          return;
+        }
+        totalEl.textContent = data.total.toLocaleString('fr-FR');
+        const L = labels();
+        detailEl.textContent =
+          data.nights + ' ' + L.days +
+          ' · ' + L.avg + ' ' + data.avg_night + ' €' +
+          ' · ' + L.from + ' ' + data.start + ' → ' + L.to + ' ' + data.end;
+        const book = new URL(bookLink.href, window.location.origin);
+        book.searchParams.set('apartment_id', data.apartment_id);
+        bookLink.href = book.pathname + book.search;
+      })
+      .catch(function () {
+        totalEl.textContent = '—';
+        detailEl.textContent = '…';
+      });
+  }
+
+  root.querySelectorAll('.av-quote-unit').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      root.querySelectorAll('.av-quote-unit').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      unit = btn.dataset.unit;
+      if (unit === 'days' && Number(qty.value) < 1) qty.value = 7;
+      if (unit === 'weeks' && Number(qty.value) > 52) qty.value = 2;
+      if (unit === 'months' && Number(qty.value) > 24) qty.value = 1;
+      if (unit === 'weeks') qty.value = Math.min(52, Math.max(1, Number(qty.value) || 1));
+      if (unit === 'months') qty.value = Math.min(24, Math.max(1, Number(qty.value) || 1));
+      refresh();
+    });
+  });
+  document.getElementById('quote_minus').addEventListener('click', function () {
+    qty.value = Math.max(1, Number(qty.value || 1) - 1);
+    refresh();
+  });
+  document.getElementById('quote_plus').addEventListener('click', function () {
+    const max = unit === 'days' ? 365 : unit === 'weeks' ? 52 : 24;
+    qty.value = Math.min(max, Number(qty.value || 1) + 1);
+    refresh();
+  });
+  apt.addEventListener('change', refresh);
+  qty.addEventListener('change', refresh);
+  start.addEventListener('change', refresh);
+  refresh();
+})();
+</script>
+{% endmacro %}
+
+{% macro offers_grid(offers) %}
+{% if offers %}
+<section class="av-offers mb-5" id="offres" style="scroll-margin-top: 100px;" aria-labelledby="offers-heading">
+  <h2 class="h3 mb-1" id="offers-heading">{{ _('offers.heading') }}</h2>
+  <p class="text-muted mb-4">{{ _('offers.intro') }}</p>
+  <div class="row g-3">
+    {% for offer in offers[:6] %}
+    <div class="col-md-6 col-lg-4">
+      <article class="av-offer-card h-100">
+        {% if offer.active %}<span class="av-offer-badge">{{ _('offers.active') }}</span>{% endif %}
+        {% if offer.image %}
+        <img src="/static/{{ offer.image }}" alt="{{ offer.apartment_name }}" class="av-offer-img" loading="lazy" decoding="async" width="640" height="360" />
+        {% endif %}
+        <div class="av-offer-body">
+          <h3 class="h5 mb-1">{{ offer.apartment_name }}</h3>
+          {% if offer.label %}<p class="small text-warning mb-1">{{ offer.label }}</p>{% endif %}
+          <p class="mb-2">
+            <strong class="fs-4">{{ offer.rate }} €</strong>
+            <span class="text-muted">{{ _('home.per_night') }}</span>
+          </p>
+          <p class="small text-muted mb-2">
+            {{ _('offers.from') }} {{ offer.start }} → {{ offer.end }}
+            · {{ _('offers.week_from') }} {{ offer.week_from }} €
+            · {{ _('offers.month_from') }} {{ offer.month_from }} €
+          </p>
+          <a class="btn btn-warning btn-sm" href="{{ url_for('book_online', apartment_id=offer.apartment_id) }}">{{ _('cta.book_online') }}</a>
+          <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('apartments_public') }}#apt-{{ offer.apartment_id }}">{{ _('home.see_calendar') }}</a>
+        </div>
+      </article>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endmacro %}

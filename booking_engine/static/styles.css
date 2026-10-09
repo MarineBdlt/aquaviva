@@ -1319,3 +1319,29 @@ h4.text-warning,
 .av-section {
   scroll-margin-top: 100px;
 }
+
+
+/* Quote + offers (homepage / prices) */
+.av-eyebrow { letter-spacing: 0.08em; text-transform: uppercase; font-size: 0.75rem; color: #5a7a82; font-weight: 600; }
+.av-quote-card {
+  background: linear-gradient(160deg, #f7faf8 0%, #eef5f3 100%);
+  border: 1px solid rgba(30, 79, 90, 0.12);
+  border-radius: 1rem;
+  padding: 1.25rem 1.35rem;
+}
+.av-quote-units .btn.active { background: #1e4f5a; border-color: #1e4f5a; color: #fff; }
+.av-quote-total { font-size: 1.85rem; font-weight: 700; color: #1e4f5a; line-height: 1.1; }
+.av-offer-card {
+  position: relative;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(30, 79, 90, 0.12);
+  background: #fff;
+}
+.av-offer-img { width: 100%; height: 160px; object-fit: cover; display: block; }
+.av-offer-body { padding: 1rem 1.1rem 1.15rem; }
+.av-offer-badge {
+  position: absolute; top: 0.75rem; left: 0.75rem; z-index: 1;
+  background: #c9a227; color: #1a1a1a; font-size: 0.7rem; font-weight: 700;
+  padding: 0.25rem 0.55rem; border-radius: 999px; text-transform: uppercase;
+}

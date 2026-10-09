@@ -32,6 +32,13 @@ from booking_engine.i18n import (
     MONTHS,
     DEFAULT_LANG,
 )
+from booking_engine.pricing import (
+    current_season_offers,
+    get_apartment_rate_for_date,
+    get_apartment_rate_for_month,
+    load_apartment_season_rates,
+    quote_apartment,
+)
 from booking_engine.villa_info import (
     get_villa_info,
     VILLA_LOCATION,
@@ -42,7 +49,7 @@ from booking_engine.villa_info import (
     spots_list_to_text,
     text_to_spots_list,
 )
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import calendar
 import random
 import uuid
@@ -556,43 +563,6 @@ def _parse_admin_date(raw):
     return None
 
 
-def _match_season_rate(season_rates, day):
-    matches = [s for s in season_rates if s.start_date <= day <= s.end_date]
-    if not matches:
-        return None
-    return min(matches, key=lambda s: ((s.end_date - s.start_date).days, s.id))
-
-
-def load_apartment_season_rates(apartment_id):
-    return (
-        ApartmentSeasonRate.query.filter_by(apartment_id=apartment_id)
-        .order_by(ApartmentSeasonRate.start_date.asc())
-        .all()
-    )
-
-
-def get_apartment_rate_for_date(apartment, day, season_rates=None):
-    """Effective nightly rate for a calendar day (season or default)."""
-    if isinstance(day, datetime):
-        day = day.date()
-    if season_rates is None:
-        season_rates = load_apartment_season_rates(apartment.id)
-    season = _match_season_rate(season_rates, day)
-    if season:
-        return season.rate, "season", season
-    return apartment.rate, "default", None
-
-
-def get_apartment_rate_for_month(apartment, year, month, season_rates=None):
-    """Effective nightly rate shown for a month (uses the 15th when possible)."""
-    from calendar import monthrange
-
-    _, last = monthrange(year, month)
-    mid_day = datetime(year, month, min(15, last)).date()
-    rate, source, _ = get_apartment_rate_for_date(apartment, mid_day, season_rates=season_rates)
-    return rate, source
-
-
 def ensure_room_availability_rows(room, start_date, end_date):
     """Ensure listed_room and availability rows exist for each date."""
     existing = {
@@ -734,8 +704,41 @@ def gallery():
 
 @app.route("/prices", methods=["GET"])
 def prices():
-    # Public prices page hidden for now (content felt empty); keep route for old links.
-    return redirect(url_for("index"))
+    ensure_cms_defaults()
+    apartments = Apartment.query.order_by(Apartment.name.asc()).all()
+    return render_template(
+        "prices.html",
+        prices_content=get_site_content("prices"),
+        apartments=apartments,
+        current_offers=current_season_offers(),
+        quote_apartments=[
+            {"id": a.id, "name": a.name, "rate": a.rate, "bedrooms": a.bedrooms}
+            for a in apartments
+        ],
+    )
+
+
+
+@app.route("/api/quote", methods=["GET"])
+def api_quote():
+    """JSON quote for days / weeks / months."""
+    ensure_cms_defaults()
+    apt_id = request.args.get("apartment_id", type=int)
+    unit = (request.args.get("unit") or "days").strip().lower()
+    quantity = request.args.get("quantity", default=1, type=int) or 1
+    start_raw = (request.args.get("start") or "").strip()
+    apartment = Apartment.query.get(apt_id) if apt_id else Apartment.query.order_by(Apartment.id.asc()).first()
+    if not apartment:
+        return {"ok": False, "error": "no_apartment"}, 404
+    try:
+        start = datetime.strptime(start_raw, "%Y-%m-%d").date() if start_raw else date.today()
+    except ValueError:
+        return {"ok": False, "error": "bad_start"}, 400
+    try:
+        result = quote_apartment(apartment, start, unit=unit, quantity=max(1, quantity))
+    except ValueError as exc:
+        return {"ok": False, "error": str(exc)}, 400
+    return result
 
 
 @app.route("/reserver", methods=["GET", "POST"])
@@ -1299,6 +1302,18 @@ def _home_page_context():
         .all()
     )
     contents = get_site_contents("home", "about")
+    # Cap hero to 3 slides for lighter pages
+    hero_images = hero_images[:3]
+    offers = current_season_offers()
+    quote_apartments = [
+        {
+            "id": a.id,
+            "name": a.name,
+            "rate": a.rate,
+            "bedrooms": a.bedrooms,
+        }
+        for a in apartments
+    ]
     return {
         "home_content": contents["home"],
         "about_content": contents["about"],
@@ -1307,6 +1322,8 @@ def _home_page_context():
         "hero_images": hero_images,
         "villa": get_villa_info(),
         "guestbook_entries": guestbook_entries,
+        "current_offers": offers,
+        "quote_apartments": quote_apartments,
     }
 
 

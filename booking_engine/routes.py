@@ -50,6 +50,7 @@ from booking_engine.villa_info import (
     text_to_spots_list,
 )
 from datetime import date, datetime, timedelta
+from pathlib import Path
 import calendar
 import random
 import uuid
@@ -253,6 +254,32 @@ def ensure_cms_defaults():
     _ensure_site_logo()
     _ensure_site_email()
     _apply_casa_rosa_content_seed()
+    _fix_missing_static_images()
+
+
+def _fix_missing_static_images():
+    """Remap DB image paths that point to deleted/deduped files."""
+    static_root = Path(basedir) / "static"
+    remap = {
+        "uploads/8b8b890294384ee9827c6587cc6d2b6b_IMG_69071.jpg": "uploads/9490da4e07ff42d7ab1f75e64a528311_IMG_69071.jpg",
+        "uploads/21d4675d54264d94bce2da0181248204_IMG_69022.jpeg": "uploads/IMG_6902.jpeg",
+    }
+    changed = False
+    for model in (ApartmentImage, GalleryImage):
+        for row in model.query.all():
+            path = (row.image_file or "").strip()
+            if not path:
+                continue
+            if path in remap:
+                row.image_file = remap[path]
+                changed = True
+                path = row.image_file
+            if not (static_root / path).is_file():
+                # Fall back to stock image so the page stays light & unbroken
+                row.image_file = "uploads/stock_room_image.jpeg"
+                changed = True
+    if changed:
+        db.session.commit()
 
 
 def _ensure_apartment_season_rates_table():

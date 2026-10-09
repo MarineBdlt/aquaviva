@@ -54,3 +54,24 @@ git pull
 pip install -r requirements.txt
 # puis Reload dans l’onglet Web
 ```
+
+
+## Mise à jour sur www.webbap.fr (Stockpay + Aquaviva)
+
+Une seule web app PA, Virtualenv = `~/stockpay/.venv`.
+
+```bash
+cd ~/aquaviva
+git fetch origin
+git checkout cursor/fix-menu-clicks
+git pull origin cursor/fix-menu-clicks
+source ~/stockpay/.venv/bin/activate
+pip install -r ~/aquaviva/requirements.txt
+```
+
+Puis onglet **Web** → **Reload** `www.webbap.fr`.
+
+Vérifier :
+- https://www.webbap.fr/aquaviva/ — offres + estimateur jours/semaines/mois
+- https://www.webbap.fr/aquaviva/prices/
+- https://www.webbap.fr/stockpay/

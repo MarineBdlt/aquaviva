@@ -45,7 +45,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="{{ url_for('static', filename='styles.css') }}?v=book8" rel="stylesheet">
+    <link href="{{ url_for('static', filename='styles.css') }}?v=paths1" rel="stylesheet">
 
     <script type="text/javascript" src="//cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.10.0/js/bootstrap-datepicker.min.js" integrity="sha512-LsnSViqQyaXpD4mBBdRYeP6sRwJiJveh2ZIbW41EBrNmKxgr/LFZIiWT6yr+nycvhvauz8c2nYMhrP80YhG7Cw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -121,11 +121,10 @@
                         {% else %}
                         <ul class="navbar-nav ms-auto align-items-lg-center mt-2">
                             <li class="nav-item {{'active' if active_page == 'home'}}"><a class="nav-link" href="{{ url_for('index') }}">{{ _('nav.home') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#appartements">{{ _('nav.apartments') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#location-annee">{{ _('nav.yearly') }}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#location-vacances">{{ _('home.holiday_title') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#localisation">{{ _('home.shortcut_location') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#qui-sommes-nous">{{ _('nav.about') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
-                            <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
                             <li class="nav-item"><a class="nav-link" href="{{ url_for('apartments_public') }}">{{ _('nav.calendars') }}</a></li>
                             <li class="nav-item">
                                 <a class="nav-link av-nav-book" href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a>
@@ -159,10 +158,11 @@
                 <div class="col-md-4">
                     <h2 class="h6 av-accent-text mb-3">{{ _('footer.explore') }}</h2>
                     <ul class="list-unstyled av-footer-links mb-0">
+                        <li><a href="{{ url_for('index') }}#location-annee">{{ _('nav.yearly') }}</a></li>
+                        <li><a href="{{ url_for('index') }}#location-vacances">{{ _('home.holiday_title') }}</a></li>
                         <li><a href="{{ url_for('index') }}#appartements">{{ _('nav.apartments') }}</a></li>
                         <li><a href="{{ url_for('index') }}#localisation">{{ _('home.shortcut_location') }}</a></li>
                         <li><a href="{{ url_for('index') }}#qui-sommes-nous">{{ _('nav.about') }}</a></li>
-                        <li><a href="{{ url_for('index') }}#bonnes-adresses">{{ _('home.shortcut_spots') }}</a></li>
                         <li><a href="{{ url_for('index') }}#livre-dor">{{ _('nav.guestbook') }}</a></li>
                     </ul>
                 </div>

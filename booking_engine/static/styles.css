@@ -1345,3 +1345,53 @@ h4.text-warning,
   background: #c9a227; color: #1a1a1a; font-size: 0.7rem; font-weight: 700;
   padding: 0.25rem 0.55rem; border-radius: 999px; text-transform: uppercase;
 }
+
+/* Homepage — two rental paths */
+.home-paths {
+  scroll-margin-top: 100px;
+}
+
+.home-path-card {
+  padding: 1.5rem 1.4rem 1.55rem;
+  border-radius: 1.15rem;
+  border: 1px solid var(--av-border);
+  background: linear-gradient(165deg, var(--av-white) 0%, var(--av-paper) 100%);
+  box-shadow: var(--av-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.home-path-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(30, 79, 90, 0.14);
+}
+
+.home-path-card--yearly {
+  border-top: 4px solid var(--av-sea);
+}
+
+.home-path-card--holiday {
+  border-top: 4px solid var(--av-sand-deep);
+}
+
+.home-path-card h3 {
+  font-family: var(--av-font-display);
+  color: var(--av-sea-deep);
+  font-weight: 700;
+}
+
+.home-rate-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  background: var(--av-foam);
+  border: 1px solid var(--av-border);
+  border-radius: 0.85rem;
+  font-size: 0.92rem;
+  color: var(--av-ink-soft);
+}
+
+.home-rate-chip strong {
+  color: var(--av-sea-deep);
+  font-family: var(--av-font-display);
+}

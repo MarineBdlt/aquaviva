@@ -27,7 +27,7 @@
         <div class="carousel-inner rounded">
             {% for image in hero_images %}
             <div class="carousel-item {{ 'active' if loop.first else '' }}">
-                <img src="/static/{{ image.image_file }}" class="d-block w-100 home-hero-image" width="1200" height="520" {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" alt="{{ image.caption or ('Villa Aqua Viva Calcatoggio — photo ' ~ loop.index) }}">
+                <img src="{{ url_for('static', filename=image.image_file) }}" class="d-block w-100 home-hero-image" width="1200" height="520" {% if loop.first %}fetchpriority="high"{% else %}loading="lazy"{% endif %} decoding="async" alt="{{ image.caption or ('Villa Aqua Viva Calcatoggio — photo ' ~ loop.index) }}">
             </div>
             {% endfor %}
         </div>
@@ -48,11 +48,7 @@
 <div class="container home-intro text-center mb-2">
     <p class="av-eyebrow mb-2">Calcatoggio · Corse-du-Sud</p>
     <h1 class="mb-2 av-hero-title">{{ home_content.title }}</h1>
-    <p class="lead mb-3">{{ home_content.body }}</p>
-    <p class="av-btn-row justify-content-center mb-0">
-        <a class="btn btn-warning" href="#tarifs-rapides">{{ _('quote.heading') }}</a>
-        <a class="btn btn-outline-secondary" href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a>
-    </p>
+    <p class="lead mb-0">{{ home_content.body }}</p>
 </div>
 
 <style>
@@ -63,37 +59,46 @@
 
 {% block main %}
 <div class="container text-start">
-    <nav class="home-shortcuts mb-4" aria-label="{{ _('aria.quick_nav') }}">
-        <a class="home-shortcut" href="#offres">
-            {{ pencil_icon('calendar', 88) }}
-            <span class="home-shortcut-label">{{ _('home.shortcut_offers') }}</span>
-        </a>
-        <a class="home-shortcut" href="#tarifs-rapides">
-            {{ pencil_icon('home', 88) }}
-            <span class="home-shortcut-label">{{ _('home.shortcut_quote') }}</span>
-        </a>
-        <a class="home-shortcut" href="#appartements">
-            {{ pencil_icon('apartments', 88) }}
-            <span class="home-shortcut-label">{{ _('home.shortcut_apartments') }}</span>
-        </a>
-        <a class="home-shortcut" href="#localisation">
-            {{ pencil_icon('map', 88) }}
-            <span class="home-shortcut-label">{{ _('home.shortcut_location') }}</span>
-        </a>
-        <a class="home-shortcut" href="#livre-dor">
-            {{ pencil_icon('book', 88) }}
-            <span class="home-shortcut-label">{{ _('home.shortcut_guestbook') }}</span>
-        </a>
-    </nav>
 
-    {{ offers_grid(current_offers or []) }}
+    {# —— Two clear visitor paths —— #}
+    <section class="home-paths mb-5" aria-labelledby="home-paths-heading">
+        <h2 class="h4 text-center mb-4" id="home-paths-heading">{{ _('home.path_choose') }}</h2>
+        <div class="row g-4">
+            <div class="col-md-6">
+                <article class="home-path-card home-path-card--yearly h-100" id="location-annee">
+                    <p class="av-eyebrow mb-2">{{ _('home.yearly_period') }}</p>
+                    <h3 class="h3 mb-2 d-flex align-items-center gap-2">
+                        {{ pencil_icon('home', 36) }}
+                        <span>{{ _('home.yearly_title') }}</span>
+                    </h3>
+                    <p class="mb-3">{{ _('home.yearly_intro') }}</p>
+                    <p class="av-btn-row mb-0">
+                        <a class="btn btn-warning" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">{{ _('home.yearly_contact') }}</a>
+                        <a class="btn btn-outline-secondary" href="mailto:{{ site_email }}">{{ site_email }}</a>
+                    </p>
+                </article>
+            </div>
+            <div class="col-md-6">
+                <article class="home-path-card home-path-card--holiday h-100" id="location-vacances">
+                    <p class="av-eyebrow mb-2">{{ _('home.holiday_period') }}</p>
+                    <h3 class="h3 mb-2 d-flex align-items-center gap-2">
+                        {{ pencil_icon('calendar', 36) }}
+                        <span>{{ _('home.holiday_title') }}</span>
+                    </h3>
+                    <p class="mb-3">{{ _('home.holiday_intro') }}</p>
+                    <p class="av-btn-row mb-0">
+                        <a class="btn btn-warning" href="#tarifs-rapides">{{ _('home.holiday_cta') }}</a>
+                        <a class="btn btn-outline-secondary" href="{{ url_for('book_online') }}">{{ _('cta.book_online') }}</a>
+                    </p>
+                </article>
+            </div>
+        </div>
+    </section>
 
-    <div class="mb-5">
-      {{ quote_widget(quote_apartments or apartments) }}
-    </div>
-
-    <section class="mb-5 av-section" id="appartements" style="scroll-margin-top: 100px;">
-        {{ section_title('apartments', _('home.apartments_heading')) }}
+    {# —— Location à l'année : appartements —— #}
+    <section class="mb-5 av-section" id="appartements">
+        {{ section_title('apartments', _('home.yearly_title')) }}
+        <p class="text-muted mb-4">{{ _('home.apartments_yearly_note') }}</p>
         {% if apartments %}
         <div class="row g-4">
             {% for apartment in apartments %}
@@ -101,7 +106,7 @@
                 <a href="{{ url_for('apartments_public') }}#apt-{{ apartment.id }}" class="text-decoration-none text-dark">
                     <article class="card h-100 shadow-sm home-apartment-card">
                         {% if apartment.images %}
-                        <img src="/static/{{ apartment.images[0].image_file }}" class="card-img-top" loading="lazy" decoding="async" width="640" height="220" alt="{{ apartment.name }} — Villa Aqua Viva Calcatoggio" style="height: 220px; object-fit: cover;" />
+                        <img src="{{ url_for('static', filename=apartment.images[0].image_file) }}" class="card-img-top" loading="lazy" decoding="async" width="640" height="220" alt="{{ apartment.name }} — Villa Aqua Viva Calcatoggio" style="height: 220px; object-fit: cover;" />
                         {% else %}
                         <img src="{{ url_for('static', filename='uploads/stock_room_image.jpeg') }}" class="card-img-top" loading="lazy" decoding="async" width="640" height="220" alt="{{ apartment.name }}" style="height: 220px; object-fit: cover;" />
                         {% endif %}
@@ -113,8 +118,6 @@
                             <p class="mb-2">
                                 <strong>{{ apartment.bedrooms }}</strong>
                                 {% if apartment.bedrooms > 1 %}{{ _('home.bedrooms') }}{% else %}{{ _('home.bedroom') }}{% endif %}
-                                · <strong>{{ apartment.rate }} €</strong> {{ _('home.per_night') }}
-                                <span class="text-muted small">· {{ apartment.rate * 7 }} € / {{ _('quote.weeks_word') }}</span>
                             </p>
                             {% if apartment.description %}
                             <p class="card-text text-muted small mb-2">{{ apartment.description|truncate(120, True, '…') }}</p>
@@ -133,14 +136,46 @@
         <p class="text-muted">{{ _('home.no_apartments') }}</p>
         {% endif %}
         <p class="mt-3 mb-0">
-            <a href="{{ url_for('apartments_public') }}" class="av-inline-link">{{ _('nav.apartments') }} →</a>
-            · <a href="{{ url_for('prices') }}" class="av-inline-link">{{ _('nav.prices') }} →</a>
+            <a href="{{ site_whatsapp_url }}" class="av-inline-link" target="_blank" rel="noopener noreferrer">{{ _('home.yearly_contact') }} →</a>
+            · <a href="{{ url_for('apartments_public') }}" class="av-inline-link">{{ _('nav.apartments') }} →</a>
         </p>
     </section>
 
     <hr class="my-5">
 
-    <section class="mb-5 av-section" id="localisation" style="scroll-margin-top: 100px;">
+    {# —— Location de vacances : offres + devis —— #}
+    <section class="mb-5 av-section" id="vacances" aria-labelledby="vacances-heading">
+        {{ section_title('calendar', _('home.holiday_title')) }}
+        <p class="text-muted mb-4">{{ _('home.holiday_period') }} — {{ _('home.holiday_intro') }}</p>
+
+        {{ offers_grid(current_offers or []) }}
+
+        <div class="mb-4">
+          {{ quote_widget(quote_apartments or apartments) }}
+        </div>
+
+        {% if apartments %}
+        <div class="row g-3 mb-2">
+            {% for apartment in apartments %}
+            <div class="col-sm-6 col-lg-4">
+                <div class="home-rate-chip">
+                    <strong>{{ apartment.name }}</strong>
+                    <span>{{ apartment.rate }} € {{ _('home.per_night') }}
+                    · {{ apartment.rate * 7 }} € / {{ _('quote.weeks_word') }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <p class="mt-3 mb-0">
+            <a href="{{ url_for('prices') }}" class="av-inline-link">{{ _('nav.prices') }} →</a>
+            · <a href="{{ url_for('book_online') }}" class="av-inline-link">{{ _('cta.book_online') }} →</a>
+        </p>
+    </section>
+
+    <hr class="my-5">
+
+    <section class="mb-5 av-section" id="localisation">
         {{ section_title('map', villa.location.title) }}
         <div class="row g-4 align-items-stretch">
             <div class="col-lg-5">
@@ -177,13 +212,13 @@
 
     <hr class="my-5">
 
-    <section class="mb-5 av-section" id="qui-sommes-nous" style="scroll-margin-top: 100px;">
+    <section class="mb-5 av-section" id="qui-sommes-nous">
         {{ section_title('about', about_content.title) }}
         <div class="row g-4 align-items-center">
             {% if about_image_path %}
             <div class="col-md-5 text-center">
                 <figure class="postcard-frame postcard-frame--family mb-0">
-                    <img src="/static/{{ about_image_path }}" alt="{{ _('about.family_alt') }}" class="postcard-frame-img" />
+                    <img src="{{ url_for('static', filename=about_image_path) }}" alt="{{ _('about.family_alt') }}" class="postcard-frame-img" />
                 </figure>
             </div>
             {% endif %}
@@ -207,7 +242,7 @@
 
     <hr class="my-5">
 
-    <section class="mb-5 av-section" id="bonnes-adresses" style="scroll-margin-top: 100px;">
+    <section class="mb-5 av-section" id="bonnes-adresses">
         {{ section_title('utensils', villa.good_spots.title) }}
         <p class="text-muted mb-4">{{ villa.good_spots.intro }}</p>
         <div class="row g-3">
@@ -229,7 +264,7 @@
 
     <hr class="my-5">
 
-    <section class="mb-5 pb-4 av-section" id="livre-dor" style="scroll-margin-top: 100px;">
+    <section class="mb-5 pb-4 av-section" id="livre-dor">
         {{ section_title('book', _('guestbook.heading')) }}
         <p class="text-muted mb-4">{{ _('guestbook.intro') }}</p>
 
@@ -339,33 +374,4 @@
   "inLanguage": {{ ['fr','en','pt','it']|tojson }}
 }
 </script>
-
-{% if current_offers %}
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "ItemList",
-  "name": {{ _('offers.heading')|tojson }},
-  "itemListElement": [
-    {% for offer in current_offers[:6] %}
-    {
-      "@type": "ListItem",
-      "position": {{ loop.index }},
-      "item": {
-        "@type": "Offer",
-        "name": {{ (offer.apartment_name ~ (' — ' ~ offer.label if offer.label else ''))|tojson }},
-        "price": {{ offer.rate }},
-        "priceCurrency": "EUR",
-        "availability": "https://schema.org/InStock",
-        "url": {{ url_for('book_online', apartment_id=offer.apartment_id, _external=True)|tojson }},
-        "validFrom": {{ offer.start|tojson }},
-        "validThrough": {{ offer.end|tojson }}
-      }
-    }{% if not loop.last %},{% endif %}
-    {% endfor %}
-  ]
-}
-</script>
-{% endif %}
-
 {% endblock %}

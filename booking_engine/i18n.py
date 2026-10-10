@@ -63,6 +63,7 @@ TRANSLATIONS = {
         "it": "Affitto vacanze Corsica",
     },
     "title.apartments": {"fr": "Appartements", "en": "Apartments", "pt": "Apartamentos", "it": "Appartamenti"},
+    "title.prices": {"fr": "Tarifs", "en": "Prices", "pt": "Preços", "it": "Prezzi"},
     "title.about": {"fr": "Qui sommes-nous", "en": "Who we are", "pt": "Quem somos", "it": "Chi siamo"},
     "title.login": {"fr": "Connexion admin", "en": "Admin Login", "pt": "Login admin", "it": "Login admin"},
     "title.availability": {
@@ -610,6 +611,78 @@ TRANSLATIONS = {
         "en": "Villa Aqua Viva Calcatoggio rates: estimate your stay in days, weeks or months with seasonal prices.",
         "pt": "Preços Villa Aqua Viva Calcatoggio: estime a estadia em dias, semanas ou meses.",
         "it": "Tariffe Villa Aqua Viva Calcatoggio: stima il soggiorno in giorni, settimane o mesi.",
+    },
+    "nav.yearly": {
+        "fr": "Location à l’année",
+        "en": "Yearly rental",
+        "pt": "Arrendamento anual",
+        "it": "Affitto annuale",
+    },
+    "home.path_choose": {
+        "fr": "Deux façons de séjourner",
+        "en": "Two ways to stay",
+        "pt": "Duas formas de ficar",
+        "it": "Due modi per soggiornare",
+    },
+    "home.yearly_title": {
+        "fr": "Location à l’année",
+        "en": "Yearly rental",
+        "pt": "Arrendamento anual",
+        "it": "Affitto annuale",
+    },
+    "home.yearly_period": {
+        "fr": "Septembre → juin",
+        "en": "September → June",
+        "pt": "Setembro → junho",
+        "it": "Settembre → giugno",
+    },
+    "home.yearly_intro": {
+        "fr": "Les appartements de la villa pour une installation au long cours, hors saison d’été.",
+        "en": "The villa apartments for a longer stay, outside the summer season.",
+        "pt": "Os apartamentos da villa para uma estadia prolongada, fora do verão.",
+        "it": "Gli appartamenti della villa per un soggiorno lungo, fuori dalla stagione estiva.",
+    },
+    "home.yearly_cta": {
+        "fr": "Voir la location à l’année",
+        "en": "See yearly rental",
+        "pt": "Ver arrendamento anual",
+        "it": "Vedi affitto annuale",
+    },
+    "home.yearly_contact": {
+        "fr": "Nous contacter",
+        "en": "Contact us",
+        "pt": "Contactar-nos",
+        "it": "Contattaci",
+    },
+    "home.holiday_title": {
+        "fr": "Location de vacances",
+        "en": "Holiday rental",
+        "pt": "Aluguel de férias",
+        "it": "Affitto vacanze",
+    },
+    "home.holiday_period": {
+        "fr": "Été · à la nuit ou à la semaine",
+        "en": "Summer · per night or per week",
+        "pt": "Verão · por noite ou por semana",
+        "it": "Estate · a notte o a settimana",
+    },
+    "home.holiday_intro": {
+        "fr": "Tarifs saisonniers, offres du moment et devis rapide pour vos dates.",
+        "en": "Seasonal rates, current offers and a quick quote for your dates.",
+        "pt": "Tarifas de época, ofertas do momento e orçamento rápido para as suas datas.",
+        "it": "Tariffe stagionali, offerte del momento e preventivo rapido per le vostre date.",
+    },
+    "home.holiday_cta": {
+        "fr": "Estimer mon séjour",
+        "en": "Estimate my stay",
+        "pt": "Estimar a estadia",
+        "it": "Stima il soggiorno",
+    },
+    "home.apartments_yearly_note": {
+        "fr": "Idéal pour une location à l’année (sept. → juin).",
+        "en": "Ideal for a yearly rental (Sept → June).",
+        "pt": "Ideal para arrendamento anual (set. → jun.).",
+        "it": "Ideale per un affitto annuale (set. → giu.).",
     },
 
 }

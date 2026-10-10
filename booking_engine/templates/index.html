@@ -48,7 +48,11 @@
 <div class="container home-intro text-center mb-2">
     <p class="av-eyebrow mb-2">Calcatoggio · Corse-du-Sud</p>
     <h1 class="mb-2 av-hero-title">{{ home_content.title }}</h1>
-    <p class="lead mb-0">{{ home_content.body }}</p>
+    <p class="lead mb-3">{{ home_content.body }}</p>
+    <p class="av-btn-row justify-content-center mb-0">
+        <a class="btn btn-outline-secondary" href="#location-annee">{{ _('home.yearly_title') }}</a>
+        <a class="btn btn-warning" href="#location-vacances">{{ _('home.holiday_title') }}</a>
+    </p>
 </div>
 
 <style>
@@ -73,13 +77,13 @@
                     </h3>
                     <p class="mb-3">{{ _('home.yearly_intro') }}</p>
                     <p class="av-btn-row mb-0">
-                        <a class="btn btn-warning" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">{{ _('home.yearly_contact') }}</a>
-                        <a class="btn btn-outline-secondary" href="mailto:{{ site_email }}">{{ site_email }}</a>
+                        <a class="btn btn-warning" href="#appartements">{{ _('home.yearly_cta') }}</a>
+                        <a class="btn btn-outline-secondary" href="{{ site_whatsapp_url }}" target="_blank" rel="noopener noreferrer">{{ _('home.yearly_contact') }}</a>
                     </p>
                 </article>
             </div>
             <div class="col-md-6">
-                <article class="home-path-card home-path-card--holiday h-100" id="location-vacances">
+                <article class="home-path-card home-path-card--holiday h-100">
                     <p class="av-eyebrow mb-2">{{ _('home.holiday_period') }}</p>
                     <h3 class="h3 mb-2 d-flex align-items-center gap-2">
                         {{ pencil_icon('calendar', 36) }}
@@ -144,7 +148,7 @@
     <hr class="my-5">
 
     {# —— Location de vacances : offres + devis —— #}
-    <section class="mb-5 av-section" id="vacances" aria-labelledby="vacances-heading">
+    <section class="mb-5 av-section" id="location-vacances" aria-labelledby="vacances-heading">
         {{ section_title('calendar', _('home.holiday_title')) }}
         <p class="text-muted mb-4">{{ _('home.holiday_period') }} — {{ _('home.holiday_intro') }}</p>
 

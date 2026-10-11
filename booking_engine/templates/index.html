@@ -221,9 +221,15 @@
         <div class="row g-4 align-items-center">
             {% if about_image_path %}
             <div class="col-md-5 text-center">
-                <figure class="postcard-frame postcard-frame--family mb-0">
-                    <img src="{{ url_for('static', filename=about_image_path) }}" alt="{{ _('about.family_alt') }}" class="postcard-frame-img" />
-                </figure>
+                <img
+                    src="{{ url_for('static', filename=about_image_path) }}"
+                    alt="{{ _('about.family_alt') }}"
+                    class="img-fluid home-about-photo"
+                    width="1000"
+                    height="700"
+                    loading="lazy"
+                    decoding="async"
+                />
             </div>
             {% endif %}
             <div class="{% if about_image_path %}col-md-7{% else %}col-12{% endif %}">

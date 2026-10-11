@@ -14,13 +14,15 @@
     {{ section_title('about', about_content.title, 'h1') }}
     {% if about_image_path %}
     <div class="text-center mb-4">
-        <figure class="postcard-frame postcard-frame--family postcard-frame--lg d-inline-block mb-0">
-            <img
-                src="/static/{{ about_image_path }}"
-                alt="{{ about_content.title }}"
-                class="postcard-frame-img"
-            />
-        </figure>
+        <img
+            src="{{ url_for('static', filename=about_image_path) }}"
+            alt="{{ _('about.family_alt') }}"
+            class="img-fluid home-about-photo home-about-photo--lg"
+            width="1000"
+            height="700"
+            loading="lazy"
+            decoding="async"
+        />
     </div>
     {% endif %}
     <div class="lead text-dark about-body av-prose">

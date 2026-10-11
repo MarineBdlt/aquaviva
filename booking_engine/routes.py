@@ -253,6 +253,7 @@ def ensure_cms_defaults():
     _ensure_apartment_season_rates_table()
     _ensure_site_logo()
     _ensure_site_email()
+    _ensure_about_image()
     _apply_casa_rosa_content_seed()
     _fix_missing_static_images()
 
@@ -317,6 +318,35 @@ _LEGACY_LOGO_PATHS = frozenset({
     "images/la-casa-rosa-logo.png",
     "images/la-casa-rosa-postcard.png",
 })
+
+_LEGACY_ABOUT_IMAGE_PATHS = frozenset({
+    "images/famille-aqua-viva-pencil.png",
+    "images/famille-aqua-viva-pencil.jpg",
+    "images/famille-acqua-viva-pencil.png",
+})
+
+
+def _ensure_about_image():
+    """Point broken/legacy about photos at the family host photo, or clear if missing."""
+    default = _SETTING_DEFAULTS["about_image"]
+    static_root = Path(basedir) / "static"
+    default_ok = (static_root / default).is_file()
+    row = SiteSetting.query.filter_by(setting_key="about_image").first()
+    if not row:
+        if default_ok:
+            db.session.add(SiteSetting(setting_key="about_image", setting_value=default))
+            db.session.commit()
+        return
+    value = (row.setting_value or "").strip()
+    if value and (static_root / value).is_file() and value not in _LEGACY_ABOUT_IMAGE_PATHS:
+        return
+    if default_ok:
+        row.setting_value = default
+        db.session.commit()
+    elif value:
+        # Avoid an empty postcard frame when the file is gone
+        row.setting_value = ""
+        db.session.commit()
 
 
 def _ensure_site_email():
@@ -797,11 +827,11 @@ def book_online():
 @app.route("/about", methods=["GET"])
 def about():
     ensure_cms_defaults()
-    about_image = SiteSetting.query.filter_by(setting_key="about_image").first()
+    settings = get_settings("about_image")
     return render_template(
         "about.html",
         about_content=get_site_content("about"),
-        about_image_path=about_image.setting_value if about_image else ""
+        about_image_path=settings["about_image"],
     )
 
 
